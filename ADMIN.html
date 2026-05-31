@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת ניהול תמונות - תמר אלישיב</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-icons/6.7.2/css/all.min.css">
+    <style>
+        /* שכבת ניהול בריחופים */
+        .admin-editable { position: relative; }
+        .admin-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s ease; cursor: pointer; z-index: 40;
+        }
+        .admin-editable:hover .admin-overlay { opacity: 1; }
+        body { display: none; } /* מוסתר כברירת מחדל עד להזנת סיסמה */
+    </style>
+</head>
+<body class="bg-stone-50 font-sans text-stone-800">
+
+    <div class="fixed top-0 left-0 w-full bg-stone-900 text-stone-100 px-6 py-3 flex justify-between items-center z-50 shadow-md">
+        <div class="flex items-center gap-2">
+            <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+            <h1 class="font-bold text-lg">מצב ניהול תוכן חזותי באתר</h1>
+        </div>
+        <div class="text-sm text-stone-400">השינויים נשמרים ישירות לגוגל שיטס ולקלאודינרי</div>
+    </div>
+
+    <div class="pt-16 max-w-7xl mx-auto p-6">
+        
+        <div id="global-status" class="hidden fixed bottom-6 right-6 bg-stone-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 z-50">
+            <i class="fas fa-spinner animate-spin text-amber-400 text-xl" id="status-icon"></i>
+            <span id="status-text" class="font-medium">טוען נתונים מהגיליון...</span>
+        </div>
+
+        <input type="file" id="admin-file-input" class="hidden" accept="image/*">
+
+        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-stone-700"><i class="fa-solid fa-desktop ml-2"></i> תמונות רקע ראשיות (Hero Slider)</h2>
+                <button onclick="triggerAddNew('hero')" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer">
+                    <i class="fa-solid fa-plus ml-1"></i> הוסף תמונת רקע ל-Hero
+                </button>
+            </div>
+            <p class="text-sm text-stone-500 mb-6">מומלץ להעלות תמונות לרוחב (נוף). האופטימיזציה מכווצת אותן אוטומטית לרוחב 1920 פיקסלים.</p>
+            <div id="admin-hero-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                </div>
+        </section>
+
+        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-stone-700"><i class="fa-solid fa-images ml-2"></i> גלריית עבודות ראשית (ניו-בורן וחוץ)</h2>
+                <div class="flex gap-2">
+                    <button onclick="triggerAddNew('gallery_newborn')" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> הוסף לניו-בורן</button>
+                    <button onclick="triggerAddNew('gallery_outdoor')" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> הוסף לצילומי חוץ</button>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="text-md font-semibold text-stone-600 mb-3">👶 צילומי סטודיו וניו-בורן (gallery_newborn)</h3>
+                <div id="admin-gallery-newborn" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    </div>
+            </div>
+
+            <div>
+                <h3 class="text-md font-semibold text-stone-600 mb-3">🌳 צילומי חוץ וטבע (gallery_outdoor)</h3>
+                <div id="admin-gallery-outdoor" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    </div>
+            </div>
+        </section>
+
+        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <div>
+                    <h2 class="text-xl font-bold text-stone-700"><i class="fa-solid fa-wand-magic-sparkles ml-2"></i> ניהול קולקציות השראה (ONE STYLE)</h2>
+                    <p class="text-sm text-stone-500 mt-1">קולקציות עם <code class="bg-stone-100 px-1 rounded">status=inspiration</code> יוצגו בכרטיסיית ONE STYLE. התמונות משויכות לפי <code class="bg-stone-100 px-1 rounded">code</code>.</p>
+                </div>
+                <button onclick="resetInspirationForm()" class="bg-purple-700 text-white px-4 py-2 rounded-xl text-sm hover:bg-purple-800 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> קולקציה חדשה</button>
+            </div>
+
+            <form id="inspiration-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-purple-50/60 border border-purple-100 rounded-2xl p-4">
+                <input type="hidden" id="inspiration-row-id">
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 mb-1">Code לשיוך תמונות</label>
+                    <input id="inspiration-code" required class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm ltr:text-left" placeholder="collection-code">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 mb-1">name — שם הקולקציה</label>
+                    <input id="inspiration-name" required class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="שם שיופיע בכפתור באתר">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-stone-600 mb-1">title — כותרת ראשית</label>
+                    <input id="inspiration-title" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="כותרת כרטיס הקולקציה">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-stone-600 mb-1">textcontent — טקסט קולקציה</label>
+                    <textarea id="inspiration-textcontent" rows="3" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="פסקת התיאור הארוכה של קולקציית ההשראה"></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-stone-600 mb-1">clothing — ביגוד וסטיילינג</label>
+                    <textarea id="inspiration-clothing" rows="3" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="המלצות לבוש וסטיילינג"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 mb-1">color — צבע Hex</label>
+                    <div class="flex items-center gap-2">
+                        <input id="inspiration-color" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm ltr:text-left" placeholder="#FED7AA">
+                        <input id="inspiration-color-picker" type="color" value="#FED7AA" class="h-10 w-12 rounded-xl border border-stone-200 bg-white p-1 cursor-pointer" title="בחירת צבע">
+                    </div>
+                    <button type="button" onclick="pickScreenColor()" class="mt-2 w-full text-xs bg-white border border-purple-200 text-purple-800 px-3 py-2 rounded-xl hover:bg-purple-100 transition cursor-pointer"><i class="fa-solid fa-eye-dropper ml-1"></i> דגום צבע מהמסך</button>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 mb-1">circletext</label>
+                    <input id="inspiration-circletext" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="טקסט קצר לעיגול">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-stone-600 mb-1">hashtags — מופרדים בפסיקים</label>
+                    <input id="inspiration-hashtags" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="#בוהו,#טבעי">
+                </div>
+                <div class="md:col-span-2 flex items-end">
+                    <button type="submit" class="w-full bg-purple-700 text-white px-4 py-3 rounded-xl text-sm hover:bg-purple-800 transition cursor-pointer"><i class="fa-solid fa-floppy-disk ml-1"></i> שמור קולקציית השראה</button>
+                </div>
+            </form>
+
+            <h3 class="text-md font-semibold text-stone-700 mb-4 border-t pt-5">תמונות לפי קולקציות השראה</h3>
+            <div id="admin-onestyle-collections" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="md:col-span-2 text-center text-sm text-stone-500 bg-stone-50 border border-stone-200 rounded-2xl p-6">קולקציות ההשראה ייטענו מתוך גליון packages לפי status=השראה.</div>
+            </div>
+        </section>
+
+        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <div>
+                    <h2 class="text-xl font-bold text-stone-700"><i class="fa-solid fa-box-open ml-2"></i> ניהול חבילות מכירה</h2>
+                    <p class="text-sm text-stone-500 mt-1">חבילות עם <code class="bg-stone-100 px-1 rounded">status=sale</code> יוצגו באזור המחירון. <code class="bg-stone-100 px-1 rounded">code</code> נשמר לצרכים פנימיים בלבד.</p>
+                </div>
+                <button onclick="resetSalePackageForm()" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> חבילה חדשה</button>
+            </div>
+
+            <form id="sale-package-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-stone-50 border border-stone-200 rounded-2xl p-4">
+                <input type="hidden" id="sale-package-row-id">
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 mb-1">Code לזיהוי קשיח</label>
+                    <input id="sale-package-code" required class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm ltr:text-left" placeholder="newborn / outdoor / premium">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 mb-1">שם חבילה</label>
+                    <input id="sale-package-name" required class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="שם שיוצג באתר">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 mb-1">מחיר</label>
+                    <input id="sale-package-price" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="1,500 ₪">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-emerald-700 text-white px-4 py-3 rounded-xl text-sm hover:bg-emerald-800 transition cursor-pointer"><i class="fa-solid fa-floppy-disk ml-1"></i> שמור חבילה</button>
+                </div>
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-bold text-stone-600 mb-1">description — תיאור / סעיפים</label>
+                    <textarea id="sale-package-description" rows="3" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="אפשר להפריד סעיפים בשורות חדשות או בסימן •"></textarea>
+                </div>
+            </form>
+
+            <div id="admin-packages-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        </section>
+
+    </div>
+
+    <script>
+        // הגנת סיסמה בסיסית לפני טעינת הדף
+        const password = prompt("אנא הזן סיסמת מנהל על מנת לערוך את האתר:");
+        if (password === "1111") {
+            document.body.style.display = "block";
+        } else {
+            alert("סיסמה שגויה! מועבר חזרה לדף הבית.");
+            window.location.href = "index.html";
+        }
+
+        const CLOUDINARY_CLOUD_NAME = "doihydrkg";
+        const CLOUDINARY_PRESET = "ml_default";
+        const SHEETY_API_URL = "https://api.sheety.co/cdd75bc0fa7678901fbb128ca12ae370/אתר תמר אלישיב/siteImages";
+        const SHEETY_PACKAGES_API_URL = "https://api.sheety.co/cdd75bc0fa7678901fbb128ca12ae370/אתר תמר אלישיב/packages";
+
+        let currentTargetId = null;
+        let currentTargetLocation = null;
+        let isUpdateMode = true;
+
+        const heroGrid = document.getElementById('admin-hero-grid');
+        const galleryNewborn = document.getElementById('admin-gallery-newborn');
+        const galleryOutdoor = document.getElementById('admin-gallery-outdoor');
+        const onestyleCollections = document.getElementById('admin-onestyle-collections');
+        const packagesList = document.getElementById('admin-packages-list');
+        const inspirationForm = document.getElementById('inspiration-form');
+        const salePackageForm = document.getElementById('sale-package-form');
+        const inspirationColorInput = document.getElementById('inspiration-color');
+        const inspirationColorPicker = document.getElementById('inspiration-color-picker');
+        const fileInput = document.getElementById('admin-file-input');
+        let adminImagesByLocation = {};
+        let adminPackageRows = [];
+
+        function showStatus(text, isLoading = true) {
+            const statusDiv = document.getElementById('global-status');
+            const statusText = document.getElementById('status-text');
+            const statusIcon = document.getElementById('status-icon');
+            
+            statusText.innerText = text;
+            statusDiv.classList.remove('hidden');
+            
+            if (isLoading) {
+                statusIcon.className = "fas fa-spinner animate-spin text-amber-400 text-xl";
+            } else {
+                statusIcon.className = "fas fa-check-circle text-emerald-400 text-xl";
+                setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+            }
+        }
+
+        function escapeHtml(value) {
+            return (value ?? '').toString().replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+        }
+
+        function escapeJsString(value) {
+            return (value ?? '').toString().replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+        }
+
+        function getStatusValue(item) {
+            return (item.status || item.Status || '').toString().trim().toLowerCase();
+        }
+
+        function isInspirationStatus(item) {
+            const status = getStatusValue(item);
+            return ['inspiration', 'inspire', 'one style', 'onestyle', 'inspiration_only', 'inspiration-only', 'השראה', 'השראה בלבד', 'וואן סטייל'].some(token => status.includes(token));
+        }
+
+        function createImageItemHtml(img, finalUrl, finalLocation) {
+            return `
+                <div class="admin-editable relative rounded-xl overflow-hidden shadow-sm aspect-[4/3] bg-stone-200 group border border-stone-200">
+                    <img src="${escapeHtml(finalUrl)}" class="w-full h-full object-cover" alt="${escapeHtml(img.description || '')}">
+                    <div class="admin-overlay" onclick="triggerReplace(${img.id}, '${escapeJsString(finalLocation)}')">
+                        <span class="text-white bg-black/50 px-3 py-2 rounded-xl text-xs font-medium"><i class="fa-solid fa-camera ml-1"></i> החלף תמונה</span>
+                    </div>
+                    <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded z-10 font-mono select-none">ID: ${img.id}</div>
+                </div>
+            `;
+        }
+
+        function getCollectionImageKeys(pkg) {
+            const code = (pkg.code || '').toString().trim();
+            return [code, `onestyle_${code}`].filter(Boolean).map(key => key.toLowerCase());
+        }
+
+        function renderAdminCollectionImageSections(rows = adminPackageRows) {
+            const inspirationRows = rows.filter(isInspirationStatus).filter(pkg => (pkg.code || '').toString().trim());
+            if (!onestyleCollections) return;
+            if (!inspirationRows.length) {
+                onestyleCollections.innerHTML = '<div class="md:col-span-2 text-center text-sm text-stone-500 bg-stone-50 border border-stone-200 rounded-2xl p-6">אין קולקציות השראה. הוסיפו שורה ב-packages עם status=השראה ו-code תואם לתמונות.</div>';
+                return;
+            }
+
+            onestyleCollections.innerHTML = inspirationRows.map(pkg => {
+                const code = (pkg.code || '').toString().trim();
+                const images = [...new Map(getCollectionImageKeys(pkg).flatMap(key => adminImagesByLocation[key] || []).map(record => [record.img.id || record.url, record])).values()];
+                return `
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-md font-semibold text-stone-700">${escapeHtml(pkg.name || pkg.title || code)} <span class="font-mono text-[11px] text-stone-400">(${escapeHtml(code)})</span></h3>
+                            <div class="flex gap-2">
+                                <button onclick="editInspiration(${pkg.id})" class="text-xs bg-white border border-purple-200 text-purple-800 px-3 py-1 rounded-lg hover:bg-purple-100 transition cursor-pointer">ערוך קולקציה</button>
+                                <button onclick="triggerAddNew('${escapeJsString(code)}')" class="text-xs bg-stone-100 text-stone-800 px-3 py-1 rounded-lg hover:bg-stone-200 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> הוסף תמונה</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            ${images.map(({ img, url, location }) => createImageItemHtml(img, url, location)).join('') || '<div class="col-span-3 text-xs text-stone-400 bg-stone-50 border border-dashed border-stone-200 rounded-xl p-4 text-center">אין עדיין תמונות לקולקציה זו.</div>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function fetchAndRenderData() {
+            showStatus("טוען תמונות מתוך גוגל שיטס...");
+            try {
+                const response = await fetch(SHEETY_API_URL);
+                const data = await response.json();
+                const rows = data.siteImages || data.siteimages || data["siteImages"] || data["siteimages"] || [];
+
+                heroGrid.innerHTML = '';
+                galleryNewborn.innerHTML = '';
+                galleryOutdoor.innerHTML = '';
+                adminImagesByLocation = {};
+
+                rows.forEach(img => {
+                    const finalUrl = img.url || img.Url || "";
+                    const finalLocation = (img.location || img.Location || "").toString().trim();
+                    const normalizedLocation = finalLocation.toLowerCase();
+                    if (!finalUrl || !normalizedLocation) return;
+
+                    const itemHtml = createImageItemHtml(img, finalUrl, finalLocation);
+                    if (normalizedLocation === 'hero') {
+                        heroGrid.insertAdjacentHTML('beforeend', itemHtml);
+                    } else if (normalizedLocation === 'gallery_newborn') {
+                        galleryNewborn.insertAdjacentHTML('beforeend', itemHtml);
+                    } else if (normalizedLocation === 'gallery_outdoor') {
+                        galleryOutdoor.insertAdjacentHTML('beforeend', itemHtml);
+                    } else {
+                        const key = normalizedLocation.replace(/^onestyle_/, '');
+                        if (!adminImagesByLocation[key]) adminImagesByLocation[key] = [];
+                        if (!adminImagesByLocation[normalizedLocation]) adminImagesByLocation[normalizedLocation] = [];
+                        const imageRecord = { img, url: finalUrl, location: finalLocation };
+                        adminImagesByLocation[key].push(imageRecord);
+                        if (key !== normalizedLocation) adminImagesByLocation[normalizedLocation].push(imageRecord);
+                    }
+                });
+
+                renderAdminCollectionImageSections();
+                showStatus("הנתונים נטענו בהצלחה!", false);
+            } catch (error) {
+                console.error("Error loading data:", error);
+                showStatus("שגיאה בטעינת הנתונים משיטי", true);
+            }
+        }
+
+        function triggerReplace(id, location) {
+            currentTargetId = id;
+            currentTargetLocation = location;
+            isUpdateMode = true;
+            fileInput.click();
+        }
+
+        function triggerAddNew(location) {
+            currentTargetLocation = location;
+            isUpdateMode = false;
+            fileInput.click();
+        }
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showStatus("מעלה קובץ לשרת המאובטח של Cloudinary...");
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_PRESET);
+
+                const cloudinaryResponse = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const cloudinaryData = await cloudinaryResponse.json();
+                
+                if (!cloudinaryData.secure_url) {
+                    throw new Error("Cloudinary upload failed");
+                }
+
+                let rawUrl = cloudinaryData.secure_url;
+                let optimizedUrl = rawUrl;
+
+                if (rawUrl.includes('/upload/')) {
+                    if (currentTargetLocation === 'hero') {
+                        optimizedUrl = rawUrl.replace('/upload/', '/upload/w_1920,f_auto,q_auto/');
+                    } else {
+                        optimizedUrl = rawUrl.replace('/upload/', '/upload/w_1200,f_auto,q_auto/');
+                    }
+                }
+
+                if (isUpdateMode) {
+                    showStatus("מעדכן את שורת הנתונים בגוגל שיטס...");
+                    
+                    // מנגנון הגנה דינמי ל-PUT: שולח את כל הוריאציות של המפתח העטיפתי
+                    const putBody1 = { siteImage: { "url": optimizedUrl } };
+                    const putBody2 = { siteimage: { "url": optimizedUrl } };
+                    const putBody3 = { siteImages: { "url": optimizedUrl } };
+
+                    let res = await fetch(`${SHEETY_API_URL}/${currentTargetId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(putBody1)
+                    });
+                    
+                    if (!res.ok) {
+                        res = await fetch(`${SHEETY_API_URL}/${currentTargetId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(putBody2)
+                        });
+                    }
+                    
+                    if (!res.ok) throw new Error("Sheety PUT failed");
+
+                } else {
+                    showStatus("מוסיף שורה חדשה ומאנדקס בגוגל שיטס...");
+                    
+                    // הגנה חכמה ל-POST: אנחנו מכינים 3 גרסאות שונות של מבנה ה-JSON
+                    const bodyOptions = [
+                        { siteImage: { "location": currentTargetLocation, "url": optimizedUrl, "description": `תמונה חדשה` } },
+                        { siteimage: { "location": currentTargetLocation, "url": optimizedUrl, "description": `תמונה חדשה` } },
+                        { siteImages: { "location": currentTargetLocation, "url": optimizedUrl, "description": `תמונה חדשה` } }
+                    ];
+
+                    let success = false;
+                    
+                    // הקוד מנסה את האפשרויות אחת אחרי השנייה בלולאה עד שאחת מצליחה!
+                    for (let option of bodyOptions) {
+                        try {
+                            const res = await fetch(SHEETY_API_URL, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(option)
+                            });
+                            if (res.ok) {
+                                success = true;
+                                break; 
+                            }
+                        } catch (err) {
+                            console.log("ניסיון מבנה נכשל, מנסה מבנה חלופי...");
+                        }
+                    }
+                    
+                    if (!success) throw new Error("Sheety POST failed all naming variations");
+                }
+
+                showStatus("השינויים נשמרו בהצלחה במערכת!", false);
+                fileInput.value = ''; 
+                fetchAndRenderData(); 
+
+            } catch (error) {
+                console.error("Error during upload pipeline:", error);
+                showStatus("אופס! קרתה שגיאה בתהליך ההעלאה או העדכון. ודא ששמות העמודות בשיטס שונו.", true);
+            }
+        });
+
+        function getInputValue(id) {
+            return document.getElementById(id)?.value.trim() || '';
+        }
+
+        function setInputValue(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.value = value || '';
+        }
+
+        function normalizeHexColor(value) {
+            const raw = (value || '').trim();
+            if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toUpperCase();
+            if (/^[0-9a-fA-F]{6}$/.test(raw)) return `#${raw.toUpperCase()}`;
+            return raw;
+        }
+
+        function setInspirationColor(value) {
+            const color = normalizeHexColor(value) || '#FED7AA';
+            setInputValue('inspiration-color', color);
+            if (/^#[0-9A-F]{6}$/.test(color) && inspirationColorPicker) {
+                inspirationColorPicker.value = color;
+            }
+        }
+
+        async function pickScreenColor() {
+            if (!window.EyeDropper) {
+                alert('הדפדפן הנוכחי לא תומך בדגימת צבע מהמסך. אפשר להשתמש בבוחר הצבעים או להקליד Hex ידנית.');
+                return;
+            }
+            try {
+                const result = await new EyeDropper().open();
+                setInspirationColor(result.sRGBHex);
+            } catch (error) {
+                if (error?.name !== 'AbortError') {
+                    console.error('EyeDropper failed:', error);
+                    alert('לא הצלחנו לדגום צבע מהמסך. אפשר לבחור צבע ידנית.');
+                }
+            }
+        }
+
+        inspirationColorInput?.addEventListener('input', () => {
+            const color = normalizeHexColor(inspirationColorInput.value);
+            if (/^#[0-9A-F]{6}$/.test(color) && inspirationColorPicker) inspirationColorPicker.value = color;
+        });
+        inspirationColorPicker?.addEventListener('input', () => setInspirationColor(inspirationColorPicker.value));
+
+        function getInspirationPayload() {
+            return {
+                code: getInputValue('inspiration-code'),
+                name: getInputValue('inspiration-name'),
+                price: '',
+                description: '',
+                title: getInputValue('inspiration-title'),
+                textcontent: getInputValue('inspiration-textcontent'),
+                color: normalizeHexColor(getInputValue('inspiration-color')),
+                clothing: getInputValue('inspiration-clothing'),
+                hashtags: getInputValue('inspiration-hashtags'),
+                circletext: getInputValue('inspiration-circletext'),
+                status: 'inspiration'
+            };
+        }
+
+        function getSalePackagePayload() {
+            return {
+                code: getInputValue('sale-package-code'),
+                name: getInputValue('sale-package-name'),
+                price: getInputValue('sale-package-price'),
+                description: getInputValue('sale-package-description'),
+                title: '',
+                textcontent: '',
+                color: '',
+                clothing: '',
+                hashtags: '',
+                circletext: '',
+                status: 'sale'
+            };
+        }
+
+        function resetInspirationForm() {
+            setInputValue('inspiration-row-id', '');
+            inspirationForm.reset();
+            setInspirationColor('#FED7AA');
+            document.getElementById('inspiration-code').focus();
+        }
+
+        function resetSalePackageForm() {
+            setInputValue('sale-package-row-id', '');
+            salePackageForm.reset();
+            document.getElementById('sale-package-code').focus();
+        }
+
+        function editInspiration(id) {
+            const pkg = adminPackageRows.find(item => item.id === id);
+            if (!pkg) return;
+            setInputValue('inspiration-row-id', pkg.id);
+            setInputValue('inspiration-code', pkg.code);
+            setInputValue('inspiration-name', pkg.name);
+            setInputValue('inspiration-title', pkg.title);
+            setInputValue('inspiration-textcontent', pkg.textcontent || pkg.textContent);
+            setInspirationColor(pkg.color || '#FED7AA');
+            setInputValue('inspiration-clothing', pkg.clothing);
+            setInputValue('inspiration-hashtags', pkg.hashtags);
+            setInputValue('inspiration-circletext', pkg.circletext || pkg.circleText);
+            document.getElementById('inspiration-code').focus();
+        }
+
+        function editSalePackage(id) {
+            const pkg = adminPackageRows.find(item => item.id === id);
+            if (!pkg) return;
+            setInputValue('sale-package-row-id', pkg.id);
+            setInputValue('sale-package-code', pkg.code);
+            setInputValue('sale-package-name', pkg.name);
+            setInputValue('sale-package-price', pkg.price);
+            setInputValue('sale-package-description', pkg.description);
+            document.getElementById('sale-package-code').focus();
+        }
+
+        async function fetchAndRenderPackages() {
+            showStatus("טוען חבילות וקולקציות מתוך גוגל שיטס...");
+            try {
+                const response = await fetch(SHEETY_PACKAGES_API_URL);
+                const data = await response.json();
+                adminPackageRows = data.packages || data.Packages || [];
+                const saleRows = adminPackageRows.filter(pkg => !isInspirationStatus(pkg));
+                packagesList.innerHTML = saleRows.map(pkg => `
+                    <div class="border border-stone-200 rounded-2xl p-4 bg-stone-50">
+                        <div class="flex justify-between items-start gap-3 mb-2">
+                            <div>
+                                <div class="font-mono text-[11px] text-stone-500">code: ${escapeHtml(pkg.code || '')}</div>
+                                <h3 class="font-bold text-stone-800">${escapeHtml(pkg.name || '')}</h3>
+                                ${pkg.price ? `<div class="text-emerald-700 font-bold">${escapeHtml(pkg.price)}</div>` : ''}
+                            </div>
+                            <button onclick="editSalePackage(${pkg.id})" class="text-xs bg-white border border-stone-200 px-3 py-1 rounded-lg hover:bg-stone-100">ערוך</button>
+                        </div>
+                        <p class="text-xs text-stone-600 whitespace-pre-line">${escapeHtml(pkg.description || '')}</p>
+                    </div>
+                `).join('') || '<div class="md:col-span-3 text-center text-stone-500 bg-stone-50 border border-stone-200 rounded-2xl p-6">אין עדיין חבילות מכירה בגיליון.</div>';
+                renderAdminCollectionImageSections(adminPackageRows);
+                showStatus("הנתונים נטענו בהצלחה!", false);
+            } catch (error) {
+                console.error("Error loading packages:", error);
+                showStatus("שגיאה בטעינת החבילות משיטי", true);
+            }
+        }
+
+        async function savePackageRow(rowId, payload, successMessage, resetCallback) {
+            const method = rowId ? 'PUT' : 'POST';
+            const url = rowId ? `${SHEETY_PACKAGES_API_URL}/${rowId}` : SHEETY_PACKAGES_API_URL;
+            showStatus(rowId ? "מעדכן נתונים בגוגל שיטס..." : "מוסיף שורה חדשה לגוגל שיטס...");
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ package: payload })
+                });
+                if (!response.ok) throw new Error(`Sheety package ${method} failed`);
+                resetCallback();
+                await fetchAndRenderPackages();
+                showStatus(successMessage, false);
+            } catch (error) {
+                console.error("Error saving package row:", error);
+                showStatus("שגיאה בשמירה. ודא שהעמודות כוללות id, name, price, description, code, title, textcontent, color, clothing, hashtags, circletext, status ושמעטפת ה-JSON היא package.", true);
+            }
+        }
+
+        inspirationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await savePackageRow(getInputValue('inspiration-row-id'), getInspirationPayload(), "קולקציית ההשראה נשמרה בהצלחה!", resetInspirationForm);
+        });
+
+        salePackageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await savePackageRow(getInputValue('sale-package-row-id'), getSalePackagePayload(), "חבילת המכירה נשמרה בהצלחה!", resetSalePackageForm);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndRenderData();
+            fetchAndRenderPackages();
+        });
+    </script>
+</body>
+</html>
