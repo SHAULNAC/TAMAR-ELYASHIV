@@ -261,6 +261,180 @@
           .gallery-container .box:nth-child(3){ grid-column: span 2; }
         }
 
+
+
+        /* מודל צפייה גדול בתמונות - תואם לשפה היוקרתית של האתר */
+        .image-lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: grid;
+            place-items: center;
+            padding: clamp(1rem, 2.5vw, 2rem);
+            background:
+                radial-gradient(circle at 18% 12%, rgba(225,178,182,.22), transparent 32%),
+                radial-gradient(circle at 82% 85%, rgba(159,211,199,.20), transparent 30%),
+                rgba(61,42,33,.88);
+            backdrop-filter: blur(18px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .45s ease;
+        }
+        .image-lightbox.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .image-lightbox__panel {
+            width: min(1180px, 100%);
+            max-height: min(94vh, 920px);
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr) auto auto;
+            gap: .9rem;
+            padding: clamp(.85rem, 2vw, 1.2rem);
+            border: 1px solid rgba(245,235,230,.26);
+            border-radius: 2rem;
+            background: linear-gradient(145deg, rgba(253,251,249,.96), rgba(244,239,234,.9));
+            box-shadow: 0 30px 90px rgba(0,0,0,.34), 0 0 0 1px rgba(225,178,182,.18) inset;
+            transform: translateY(24px) scale(.96);
+            transition: transform .55s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .image-lightbox.is-open .image-lightbox__panel {
+            transform: translateY(0) scale(1);
+        }
+        .image-lightbox__topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            color: #725141;
+            font-size: .78rem;
+            letter-spacing: .12em;
+        }
+        .image-lightbox__close,
+        .image-lightbox__nav {
+            border: 1px solid rgba(142,105,85,.18);
+            background: rgba(255,255,255,.78);
+            color: #583D31;
+            box-shadow: 0 10px 24px rgba(61,42,33,.08);
+            transition: transform .25s ease, background .25s ease, color .25s ease, border-color .25s ease;
+        }
+        .image-lightbox__close:hover,
+        .image-lightbox__nav:hover {
+            transform: translateY(-2px);
+            background: #3D2A21;
+            color: #FBF9F6;
+            border-color: rgba(225,178,182,.55);
+        }
+        .image-lightbox__close {
+            width: 2.65rem;
+            height: 2.65rem;
+            border-radius: 9999px;
+        }
+        .image-lightbox__stage {
+            position: relative;
+            min-height: 0;
+            overflow: hidden;
+            border-radius: 1.45rem;
+            background:
+                linear-gradient(135deg, rgba(61,42,33,.08), rgba(159,211,199,.12)),
+                #F4EFEA;
+        }
+        .image-lightbox__image {
+            width: 100%;
+            height: min(62vh, 620px);
+            object-fit: contain;
+            display: block;
+            padding: clamp(.5rem, 1vw, .9rem);
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity .34s ease, transform .44s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .image-lightbox__image.is-switching {
+            opacity: 0;
+            transform: scale(.985) translateY(8px);
+        }
+        .image-lightbox__controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: .8rem;
+        }
+        .image-lightbox__nav {
+            min-width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-lightbox__dots {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .45rem;
+            max-width: min(52vw, 520px);
+        }
+        .image-lightbox__dot {
+            width: .55rem;
+            height: .55rem;
+            border-radius: 9999px;
+            background: #D9C1B3;
+            border: 0;
+            transition: width .3s ease, background .3s ease, transform .3s ease;
+        }
+        .image-lightbox__dot.is-active {
+            width: 1.8rem;
+            background: linear-gradient(90deg, #E1B2B6, #9FD3C7);
+            transform: translateY(-1px);
+        }
+        .image-lightbox__thumbs {
+            display: flex;
+            gap: .65rem;
+            overflow-x: auto;
+            overscroll-behavior-inline: contain;
+            padding: .25rem .15rem .55rem;
+            scrollbar-color: #C2A391 rgba(245,235,230,.75);
+        }
+        .image-lightbox__thumb {
+            flex: 0 0 76px;
+            height: 58px;
+            border-radius: 1rem;
+            border: 2px solid transparent;
+            padding: 0;
+            overflow: hidden;
+            background: #F4EFEA;
+            opacity: .72;
+            transition: opacity .25s ease, transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+        }
+        .image-lightbox__thumb:hover,
+        .image-lightbox__thumb.is-active {
+            opacity: 1;
+            transform: translateY(-2px);
+            border-color: #E1B2B6;
+            box-shadow: 0 10px 22px rgba(61,42,33,.12);
+        }
+        .image-lightbox__thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-container .box,
+        .onestyle-visual.has-lightbox {
+            cursor: zoom-in;
+        }
+        body.lightbox-locked {
+            overflow: hidden;
+        }
+        @media (max-width: 640px) {
+            .image-lightbox { padding: .6rem; }
+            .image-lightbox__panel { border-radius: 1.4rem; }
+            .image-lightbox__image { height: 54vh; }
+            .image-lightbox__dots { max-width: 44vw; }
+            .image-lightbox__thumb { flex-basis: 64px; height: 50px; }
+        }
+
         @media (max-width: 768px) {
             header { min-height: 100vh; }
             .hero-decor { opacity: 0.5; transform: scale(0.72); }
@@ -664,6 +838,32 @@
     </footer>
 
     <!-- קוד JS אינטראקטיבי ודינמי לחוויית משתמש חלקה -->
+
+    <!-- מודל צפייה מוגדל בתמונות -->
+    <div id="image-lightbox" class="image-lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="צפייה מוגדלת בתמונה">
+        <div class="image-lightbox__panel" role="document">
+            <div class="image-lightbox__topbar">
+                <span id="lightbox-counter">תמונה 1 מתוך 1</span>
+                <button type="button" id="lightbox-close" class="image-lightbox__close" aria-label="סגור תצוגת תמונה">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="image-lightbox__stage">
+                <img id="lightbox-image" class="image-lightbox__image" src="" alt="תמונה מוגדלת מהגלריה">
+            </div>
+            <div class="image-lightbox__controls" aria-label="ניווט בין תמונות">
+                <button type="button" id="lightbox-next" class="image-lightbox__nav" aria-label="לתמונה הבאה">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <div id="lightbox-dots" class="image-lightbox__dots" aria-label="נקודות קרוסלה"></div>
+                <button type="button" id="lightbox-prev" class="image-lightbox__nav" aria-label="לתמונה הקודמת">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            </div>
+            <div id="lightbox-thumbs" class="image-lightbox__thumbs" aria-label="תמונות ממוזערות"></div>
+        </div>
+    </div>
+
     <script>
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const timers = new Map();
@@ -673,6 +873,144 @@
         window.collectionImageSets = {};
         window.inspirationCollections = [];
         window.availablePackages = [];
+
+        const siteAudio = {
+            click: new Audio('CLICK.mp3'),
+            shutter: new Audio('shutter.mp3')
+        };
+        Object.values(siteAudio).forEach(audio => {
+            audio.preload = 'auto';
+            audio.volume = 0.38;
+        });
+
+        function playSiteSound(type = 'click') {
+            const audio = siteAudio[type] || siteAudio.click;
+            if (!audio) return;
+            audio.currentTime = 0;
+            const playback = audio.play();
+            if (playback?.catch) playback.catch(() => {});
+        }
+
+        function isMeaningfulClickTarget(target) {
+            return Boolean(target.closest('nav a, #mobile-menu a, .collection-tab, #packages-grid a, [data-sound="shutter"]'));
+        }
+
+        function initializeSiteSounds() {
+            document.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target.closest('#lead-form button[type="submit"]')) return;
+                if (!target.closest('a, button, input[type="checkbox"], select, .gallery-container .box, .onestyle-visual.has-lightbox, [role="button"]')) return;
+                playSiteSound(isMeaningfulClickTarget(target) ? 'shutter' : 'click');
+            }, true);
+        }
+
+        const lightboxState = {
+            images: [],
+            index: 0
+        };
+
+        function getLightboxElements() {
+            return {
+                modal: document.getElementById('image-lightbox'),
+                image: document.getElementById('lightbox-image'),
+                counter: document.getElementById('lightbox-counter'),
+                dots: document.getElementById('lightbox-dots'),
+                thumbs: document.getElementById('lightbox-thumbs'),
+                close: document.getElementById('lightbox-close')
+            };
+        }
+
+        function uniqueImageSources(images) {
+            return [...new Set((images || []).filter(Boolean))];
+        }
+
+        function renderLightboxNavigation() {
+            const { dots, thumbs } = getLightboxElements();
+            if (!dots || !thumbs) return;
+            dots.innerHTML = lightboxState.images.map((_, index) => `
+                <button type="button" class="image-lightbox__dot${index === lightboxState.index ? ' is-active' : ''}" aria-label="עבור לתמונה ${index + 1}" onclick="setLightboxImage(${index})"></button>
+            `).join('');
+            thumbs.innerHTML = lightboxState.images.map((src, index) => `
+                <button type="button" class="image-lightbox__thumb${index === lightboxState.index ? ' is-active' : ''}" aria-label="פתח תמונה ${index + 1}" onclick="setLightboxImage(${index})">
+                    <img src="${escapeHtml(src)}" alt="תמונה ממוזערת ${index + 1}" loading="lazy">
+                </button>
+            `).join('');
+        }
+
+        function syncLightboxActiveControls() {
+            const { counter, dots, thumbs } = getLightboxElements();
+            if (counter) counter.textContent = `תמונה ${lightboxState.index + 1} מתוך ${lightboxState.images.length}`;
+            dots?.querySelectorAll('.image-lightbox__dot').forEach((dot, index) => dot.classList.toggle('is-active', index === lightboxState.index));
+            thumbs?.querySelectorAll('.image-lightbox__thumb').forEach((thumb, index) => {
+                thumb.classList.toggle('is-active', index === lightboxState.index);
+                if (index === lightboxState.index) thumb.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
+            });
+        }
+
+        function setLightboxImage(index) {
+            if (!lightboxState.images.length) return;
+            const { image } = getLightboxElements();
+            lightboxState.index = (index + lightboxState.images.length) % lightboxState.images.length;
+            if (!image) return;
+            image.classList.add('is-switching');
+            window.setTimeout(() => {
+                image.src = lightboxState.images[lightboxState.index];
+                image.alt = `תמונה מוגדלת ${lightboxState.index + 1}`;
+                image.classList.remove('is-switching');
+                syncLightboxActiveControls();
+            }, prefersReducedMotion ? 0 : 150);
+        }
+
+        function moveLightbox(step) {
+            setLightboxImage(lightboxState.index + step);
+        }
+
+        function openLightboxForSources(images, startIndex = 0) {
+            const { modal, image, close } = getLightboxElements();
+            const sources = uniqueImageSources(images);
+            if (!modal || !image || !sources.length) return;
+            lightboxState.images = sources;
+            lightboxState.index = Math.max(0, Math.min(startIndex, sources.length - 1));
+            image.src = sources[lightboxState.index];
+            image.alt = `תמונה מוגדלת ${lightboxState.index + 1}`;
+            renderLightboxNavigation();
+            syncLightboxActiveControls();
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('lightbox-locked');
+            close?.focus({ preventScroll: true });
+        }
+
+        function closeLightbox() {
+            const { modal } = getLightboxElements();
+            if (!modal?.classList.contains('is-open')) return;
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('lightbox-locked');
+        }
+
+        function getVisibleGalleryImages() {
+            return [...document.querySelectorAll('#gallery-grid .gallery-item')]
+                .filter(item => item.style.display !== 'none')
+                .map(item => item.querySelector('img')?.src)
+                .filter(Boolean);
+        }
+
+        function initializeImageLightbox() {
+            document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
+            document.getElementById('lightbox-prev')?.addEventListener('click', () => moveLightbox(-1));
+            document.getElementById('lightbox-next')?.addEventListener('click', () => moveLightbox(1));
+            document.getElementById('image-lightbox')?.addEventListener('click', (event) => {
+                if (event.target.id === 'image-lightbox') closeLightbox();
+            });
+            document.addEventListener('keydown', (event) => {
+                const modal = document.getElementById('image-lightbox');
+                if (!modal?.classList.contains('is-open')) return;
+                if (event.key === 'Escape') closeLightbox();
+                if (event.key === 'ArrowLeft') moveLightbox(-1);
+                if (event.key === 'ArrowRight') moveLightbox(1);
+            });
+        }
 
         function startManagedInterval(name, callback, delay) {
             stopManagedInterval(name);
@@ -811,6 +1149,20 @@
             image.alt = `${category === 'newborn' ? 'צילום ניו בורן' : 'צילום חוץ'} ${index + 1}`;
             image.loading = 'lazy';
             image.decoding = 'async';
+            item.setAttribute('role', 'button');
+            item.setAttribute('tabindex', '0');
+            item.setAttribute('aria-label', `פתח תמונה מוגדלת של ${image.alt}`);
+            item.addEventListener('click', () => {
+                const visibleImages = getVisibleGalleryImages();
+                const startIndex = Math.max(0, visibleImages.indexOf(image.src));
+                openLightboxForSources(visibleImages.length ? visibleImages : [image.src], startIndex);
+            });
+            item.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    item.click();
+                }
+            });
             item.style.setProperty('--entry-x', `${(Math.random()*140-70).toFixed(0)}px`);
             item.style.setProperty('--entry-y', `${(Math.random()*140-70).toFixed(0)}px`);
             item.style.setProperty('--entry-r', `${(Math.random()*28-14).toFixed(1)}deg`);
@@ -990,7 +1342,7 @@
                             </div>
                         </div>
                         <div class="md:col-span-4 order-1 md:order-2">
-                            <div id="onestyle-visual" class="onestyle-visual" style="${visualStyle}"></div>
+                            <div id="onestyle-visual" class="onestyle-visual ${image ? 'has-lightbox' : ''}" style="${visualStyle}" role="${image ? 'button' : 'presentation'}" tabindex="${image ? '0' : '-1'}" aria-label="${image ? 'פתח תמונה מוגדלת מקולקציית ההשראה' : ''}"></div>
                             <div class="w-28 h-28 rounded-full flex flex-col items-center justify-center p-4 text-center border-4 border-cream-100 shadow-md transition-transform hover:scale-105 mx-auto -mt-14 relative z-10" style="background-color: ${escapeHtml(collection.color)};">
                                 <span class="text-xs tracking-widest text-mocha-950 font-bold">${escapeHtml(collection.circletext || 'השראה')}</span>
                             </div>
@@ -998,6 +1350,18 @@
                     </div>
                 `;
                 card.style.opacity = '1';
+                const visual = document.getElementById('onestyle-visual');
+                const collectionImages = getCollectionImages(collection.code);
+                if (visual && collectionImages.length) {
+                    const openCollectionLightbox = () => openLightboxForSources(collectionImages, styleImageIdx);
+                    visual.addEventListener('click', openCollectionLightbox);
+                    visual.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openCollectionLightbox();
+                        }
+                    });
+                }
                 document.querySelectorAll('#collection-preview-card .icon-spin-appear').forEach(el => observer.observe(el));
             }, 200);
         }
@@ -1181,6 +1545,7 @@
         // הגשת טופס יצירת קשר ל-Google Apps Script עם משוב חזותי יוקרתי
         async function handleFormSubmit(event) {
             event.preventDefault();
+            playSiteSound('shutter');
             const form = event.currentTarget;
             const submitButton = form.querySelector('button[type="submit"]');
             const name = document.getElementById('name').value.trim();
@@ -1353,6 +1718,8 @@
                 observer.observe(el);
             });
 
+            initializeSiteSounds();
+            initializeImageLightbox();
             document.getElementById('lead-form')?.addEventListener('submit', handleFormSubmit);
             loadSiteImages();
             loadPackages();
