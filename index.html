@@ -1402,32 +1402,51 @@
             window.setTimeout(() => loader?.setAttribute('aria-hidden', 'true'), 600);
         }
 
+        function getInitialDataValue(key) {
+            if (!window.__INITIAL_DATA__ || !Object.prototype.hasOwnProperty.call(window.__INITIAL_DATA__, key)) return undefined;
+            return window.__INITIAL_DATA__[key];
+        }
+
+        function getImageRows(data) {
+            if (Array.isArray(data)) return data;
+            return data?.siteImages || data?.siteimages || data?.["siteImages"] || data?.["siteimages"] || [];
+        }
+
+        async function renderSiteImagesFromRows(rows) {
+            const byLocation = rows.reduce((acc, row) => {
+                const location = getSheetLocation(row);
+                const src = normalizeSheetImage(row);
+                if (!location || !src) return acc;
+                if (!acc[location]) acc[location] = [];
+                acc[location].push(src);
+                return acc;
+            }, {});
+
+            const heroImages = byLocation.hero || [];
+            await preloadImages(heroImages.slice(0, 3));
+            renderHeroImages(heroImages);
+            renderGalleryImages(byLocation.gallery_newborn || [], byLocation.gallery_outdoor || []);
+            const collectionImageSets = Object.keys(byLocation).reduce((sets, location) => {
+                if (['hero', 'gallery_newborn', 'gallery_outdoor'].includes(location)) return sets;
+                const key = location.replace(/^onestyle_/, '');
+                sets[key] = [...(sets[key] || []), ...byLocation[location]];
+                return sets;
+            }, {});
+            updateDynamicCollectionImages(collectionImageSets);
+        }
+
         async function loadSiteImages() {
+            const initialImages = getInitialDataValue('images');
+            if (initialImages != null) {
+                await renderSiteImagesFromRows(getImageRows(initialImages));
+                return;
+            }
+
             try {
                 const response = await fetch(SHEETY_IMAGES_API_URL);
                 if (!response.ok) throw new Error(`Sheety returned ${response.status}`);
                 const data = await response.json();
-                const rows = data.siteImages || data.siteimages || data["siteImages"] || data["siteimages"] || [];
-                const byLocation = rows.reduce((acc, row) => {
-                    const location = getSheetLocation(row);
-                    const src = normalizeSheetImage(row);
-                    if (!location || !src) return acc;
-                    if (!acc[location]) acc[location] = [];
-                    acc[location].push(src);
-                    return acc;
-                }, {});
-
-                const heroImages = byLocation.hero || [];
-                await preloadImages(heroImages.slice(0, 3));
-                renderHeroImages(heroImages);
-                renderGalleryImages(byLocation.gallery_newborn || [], byLocation.gallery_outdoor || []);
-                const collectionImageSets = Object.keys(byLocation).reduce((sets, location) => {
-                    if (['hero', 'gallery_newborn', 'gallery_outdoor'].includes(location)) return sets;
-                    const key = location.replace(/^onestyle_/, '');
-                    sets[key] = [...(sets[key] || []), ...byLocation[location]];
-                    return sets;
-                }, {});
-                updateDynamicCollectionImages(collectionImageSets);
+                await renderSiteImagesFromRows(getImageRows(data));
             } catch (error) {
                 console.error('Failed to load dynamic images from Sheety:', error);
             }
@@ -1601,7 +1620,8 @@
         }
 
         function getPackageRows(data) {
-            return data.packages || data.Packages || [];
+            if (Array.isArray(data)) return data;
+            return data?.packages || data?.Packages || [];
         }
 
         function normalizePackage(pkg) {
@@ -1681,14 +1701,23 @@
             document.querySelectorAll('#packages-grid .icon-spin-appear').forEach(el => observer.observe(el));
         }
 
+        function renderPackageRows(rows) {
+            renderOneStyleCollections(rows.filter(isInspirationStatus).map((row, index) => normalizeCollection(row, index)).filter(item => item.code && item.name));
+            renderPackages(rows.filter(isSaleStatus));
+        }
+
         async function loadPackages() {
+            const initialPackages = getInitialDataValue('packages');
+            if (initialPackages != null) {
+                renderPackageRows(getPackageRows(initialPackages));
+                return;
+            }
+
             try {
                 const response = await fetch(SHEETY_PACKAGES_API_URL);
                 if (!response.ok) throw new Error(`Sheety packages returned ${response.status}`);
                 const data = await response.json();
-                const rows = getPackageRows(data);
-                renderOneStyleCollections(rows.filter(isInspirationStatus).map((row, index) => normalizeCollection(row, index)).filter(item => item.code && item.name));
-                renderPackages(rows.filter(isSaleStatus));
+                renderPackageRows(getPackageRows(data));
             } catch (error) {
                 console.error('Failed to load packages from Sheety:', error);
                 const grid = document.getElementById('packages-grid');
