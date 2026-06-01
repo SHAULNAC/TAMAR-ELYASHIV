@@ -219,6 +219,8 @@
         const fileInput = document.getElementById('admin-file-input');
         let adminImagesByLocation = {};
         let adminPackageRows = [];
+        let editingInspirationRowId = '';
+        let editingSalePackageRowId = '';
 
 
         class UnauthorizedAdminError extends Error {
@@ -294,8 +296,17 @@
             return getFieldValue(item, 'id', 'rowId', 'rowID', '_id');
         }
 
+        function getPackageRows(data) {
+            if (Array.isArray(data)) return data;
+            const rows = getFieldValue(data, 'packages', 'package', 'Packages', 'Package');
+            if (Array.isArray(rows)) return rows;
+            return rows ? [rows] : [];
+        }
+
         function findPackageRowById(id) {
-            return adminPackageRows.find(item => getRowId(item).toString() === id.toString());
+            const normalizedId = (id ?? '').toString();
+            if (!normalizedId) return null;
+            return adminPackageRows.find(item => getRowId(item).toString() === normalizedId);
         }
 
         function setModeText(id, text) {
@@ -664,8 +675,37 @@
             };
         }
 
+        function mergePayloadWithExistingRow(rowId, payload) {
+            const existing = findPackageRowById(rowId);
+            if (!existing) return payload;
+
+            const preserveKeys = ['id', 'rowId', 'rowID', '_id'];
+            const merged = { ...payload };
+            preserveKeys.forEach(key => {
+                const value = getFieldValue(existing, key);
+                if (value !== '') merged[key] = value;
+            });
+            return merged;
+        }
+
+        function getActiveEditRowId(hiddenInputId, fallbackValue) {
+            return (getInputValue(hiddenInputId) || fallbackValue || '').toString().trim();
+        }
+
+        function preserveHiddenExistingFields(rowId, payload, hiddenKeys = []) {
+            const existing = findPackageRowById(rowId);
+            if (!existing) return payload;
+            return hiddenKeys.reduce((nextPayload, key) => {
+                const value = getFieldValue(existing, key);
+                if (value !== '' && nextPayload[key] === '') nextPayload[key] = value;
+                return nextPayload;
+            }, { ...payload });
+        }
+
         function resetInspirationForm() {
+            editingInspirationRowId = '';
             setInputValue('inspiration-row-id', '');
+            inspirationForm.dataset.editingRowId = '';
             inspirationForm.reset();
             setInspirationColor('#FED7AA');
             setModeText('inspiration-form-mode', 'מצב: קולקציה חדשה');
@@ -673,7 +713,9 @@
         }
 
         function resetSalePackageForm() {
+            editingSalePackageRowId = '';
             setInputValue('sale-package-row-id', '');
+            salePackageForm.dataset.editingRowId = '';
             salePackageForm.reset();
             setModeText('sale-package-form-mode', 'מצב: חבילה חדשה');
             document.getElementById('sale-package-code').focus();
@@ -685,8 +727,10 @@
                 showStatus('לא נמצאה קולקציה לעריכה. רעננו את הדף ונסו שוב.', true);
                 return;
             }
-            const rowId = getRowId(pkg);
+            const rowId = getRowId(pkg).toString();
             const name = getFieldValue(pkg, 'name');
+            editingInspirationRowId = rowId;
+            inspirationForm.dataset.editingRowId = rowId;
             setInputValue('inspiration-row-id', rowId);
             setInputValue('inspiration-code', getFieldValue(pkg, 'code'));
             setInputValue('inspiration-name', name);
@@ -708,8 +752,10 @@
                 showStatus('לא נמצאה חבילה לעריכה. רעננו את הדף ונסו שוב.', true);
                 return;
             }
-            const rowId = getRowId(pkg);
+            const rowId = getRowId(pkg).toString();
             const name = getFieldValue(pkg, 'name');
+            editingSalePackageRowId = rowId;
+            salePackageForm.dataset.editingRowId = rowId;
             setInputValue('sale-package-row-id', rowId);
             setInputValue('sale-package-code', getFieldValue(pkg, 'code'));
             setInputValue('sale-package-name', name);
@@ -726,7 +772,7 @@
             try {
                 const response = await fetch(SHEETY_PACKAGES_API_URL);
                 const data = await response.json();
-                adminPackageRows = data.packages || data.Packages || [];
+                adminPackageRows = getPackageRows(data);
                 const saleRows = adminPackageRows.filter(pkg => !isInspirationStatus(pkg));
                 packagesList.innerHTML = saleRows.map(pkg => {
                     const rowId = getRowId(pkg);
@@ -760,14 +806,17 @@
         }
 
         async function savePackageRow(rowId, payload, successMessage, resetCallback) {
-            const method = rowId ? 'PUT' : 'POST';
-            const url = rowId ? `${SHEETY_PACKAGES_API_URL}/${rowId}` : SHEETY_PACKAGES_API_URL;
+            const normalizedRowId = (rowId || '').toString().trim();
+            const method = normalizedRowId ? 'PUT' : 'POST';
+            const url = normalizedRowId ? `${SHEETY_PACKAGES_API_URL}/${normalizedRowId}` : SHEETY_PACKAGES_API_URL;
+            const payloadToSave = normalizedRowId ? mergePayloadWithExistingRow(normalizedRowId, payload) : payload;
             const bodyOptions = [
-                { package: payload },
-                { Package: payload },
-                { packages: payload }
+                { package: payloadToSave },
+                { Package: payloadToSave },
+                { packages: payloadToSave },
+                payloadToSave
             ];
-            showStatus(rowId ? "מעדכן נתונים בגוגל שיטס..." : "מוסיף שורה חדשה לגוגל שיטס...");
+            showStatus(normalizedRowId ? "מעדכן את השורה שנבחרה בגוגל שיטס..." : "מוסיף שורה חדשה לגוגל שיטס...");
             try {
                 let response = null;
                 for (const bodyOption of bodyOptions) {
@@ -795,12 +844,16 @@
 
         inspirationForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await savePackageRow(getInputValue('inspiration-row-id'), getInspirationPayload(), "קולקציית ההשראה נשמרה בהצלחה!", resetInspirationForm);
+            const rowId = getActiveEditRowId('inspiration-row-id', editingInspirationRowId || inspirationForm.dataset.editingRowId);
+            const payload = rowId ? preserveHiddenExistingFields(rowId, getInspirationPayload(), ['price', 'description']) : getInspirationPayload();
+            await savePackageRow(rowId, payload, rowId ? "קולקציית ההשראה עודכנה בהצלחה!" : "קולקציית ההשראה נשמרה בהצלחה!", resetInspirationForm);
         });
 
         salePackageForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await savePackageRow(getInputValue('sale-package-row-id'), getSalePackagePayload(), "חבילת המכירה נשמרה בהצלחה!", resetSalePackageForm);
+            const rowId = getActiveEditRowId('sale-package-row-id', editingSalePackageRowId || salePackageForm.dataset.editingRowId);
+            const payload = rowId ? preserveHiddenExistingFields(rowId, getSalePackagePayload(), ['title', 'textcontent', 'color', 'clothing', 'hashtags', 'circletext']) : getSalePackagePayload();
+            await savePackageRow(rowId, payload, rowId ? "חבילת המכירה עודכנה בהצלחה!" : "חבילת המכירה נשמרה בהצלחה!", resetSalePackageForm);
         });
 
         document.addEventListener('DOMContentLoaded', () => {
