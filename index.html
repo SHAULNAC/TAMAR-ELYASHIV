@@ -204,6 +204,9 @@
           initial-value: 0;
         }
 
+        .aperture-logo-wrapper.aperture-nav {
+          --aperture-progress: 1;
+        }
         .aperture-logo-wrapper.aperture-nav svg.aperture-animated-svg path {
           transition: transform .08s linear;
         }
@@ -1977,7 +1980,7 @@
         }, { threshold: 0.2 });
         apertureTriggers.forEach(el => apertureOnceObserver.observe(el));
 
-        // אנימציית צמצם בסרגל עליון: פתיחה ליניארית לפי התקדמות הגלילה בעמוד כולו
+        // אנימציית צמצם בסרגל עליון: מתחיל סגור ונפתח ליניארית לפי התקדמות הגלילה בעמוד כולו
         const navAperture = document.querySelector('.aperture-logo-wrapper.aperture-nav');
         let navScrollFrame = null;
         function updateNavApertureByScroll() {
@@ -1986,11 +1989,11 @@
             const doc = document.documentElement;
             const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
             const pageProgress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
-            const apertureProgress = 1 - pageProgress;
-            navAperture.style.setProperty('--aperture-progress', apertureProgress.toFixed(4));
+            const closedAmount = 1 - pageProgress;
+            navAperture.style.setProperty('--aperture-progress', closedAmount.toFixed(4));
         }
         function scheduleNavApertureUpdate() {
-            if (navScrollFrame !== null || prefersReducedMotion) return;
+            if (navScrollFrame !== null) return;
             navScrollFrame = window.requestAnimationFrame(updateNavApertureByScroll);
         }
         window.addEventListener('scroll', scheduleNavApertureUpdate, { passive: true });
