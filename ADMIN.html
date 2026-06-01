@@ -46,9 +46,9 @@
         <section class="mb-8 bg-amber-50 border border-amber-200 p-5 rounded-2xl shadow-sm" aria-labelledby="admin-guide-title">
             <h2 id="admin-guide-title" class="text-lg font-bold text-stone-800 mb-3"><i class="fa-solid fa-circle-info text-amber-600 ml-2"></i>איך עובדים בדף הניהול?</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-stone-700">
-                <div class="bg-white/80 border border-amber-100 rounded-xl p-3"><strong>תמונות:</strong> לחצו על תמונה קיימת כדי להחליף אותה, או על כפתור הוספה כדי ליצור שורה חדשה במיקום המתאים.</div>
-                <div class="bg-white/80 border border-amber-100 rounded-xl p-3"><strong>קולקציות ONE STYLE:</strong> לחיצה על ״ערוך קולקציה״ טוענת את השורה לטופס הסגול. לאחר השינוי לחצו ״שמור״ כדי לעדכן את אותה שורה.</div>
-                <div class="bg-white/80 border border-amber-100 rounded-xl p-3"><strong>חבילות מכירה:</strong> לחיצה על ״ערוך חבילה״ טוענת את החבילה לטופס הירוק. כפתור ״חבילה חדשה״ מנקה את מצב העריכה.</div>
+                <div class="bg-white/80 border border-amber-100 rounded-xl p-3"><strong>תמונות:</strong> לחצו על תמונה קיימת כדי להחליף אותה, או השתמשו בכפתור ״הסר״ למחיקה מהגיליון. כפתור הוספה יוצר שורה חדשה במיקום המתאים.</div>
+                <div class="bg-white/80 border border-amber-100 rounded-xl p-3"><strong>קולקציות ONE STYLE:</strong> ״ערוך קולקציה״ טוען לטופס הסגול, ״הסר״ מוחק את שורת הקולקציה. לאחר שינוי לחצו ״שמור״.</div>
+                <div class="bg-white/80 border border-amber-100 rounded-xl p-3"><strong>חבילות מכירה:</strong> ״ערוך חבילה״ טוען לטופס הירוק, ״הסר״ מוחק חבילה קיימת. ״חבילה חדשה״ מנקה את מצב העריכה.</div>
             </div>
         </section>
 
@@ -157,9 +157,9 @@
                 <button type="button" onclick="resetSalePackageForm()" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer" aria-label="פתיחת טופס חבילה חדשה"><i class="fa-solid fa-plus ml-1"></i> חבילה חדשה</button>
             </div>
 
-            <form id="sale-package-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-stone-50 border border-stone-200 rounded-2xl p-4" aria-describedby="sale-package-form-help">
+            <form id="sale-package-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4" aria-describedby="sale-package-form-help">
                 <input type="hidden" id="sale-package-row-id">
-                <div class="md:col-span-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-white border border-stone-200 rounded-xl p-3">
+                <div class="md:col-span-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-white/80 border border-emerald-100 rounded-xl p-3">
                     <p id="sale-package-form-help" class="text-xs text-stone-600"><strong>טופס חבילה:</strong> הזינו שם, מחיר ותיאור. במצב עריכה השמירה מעדכנת את החבילה הקיימת.</p>
                     <span id="sale-package-form-mode" class="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">מצב: חבילה חדשה</span>
                 </div>
@@ -272,6 +272,10 @@
             return (value ?? '').toString().replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
         }
 
+        function escapeJsAttrString(value) {
+            return escapeHtml(escapeJsString(value));
+        }
+
         function getFieldValue(item, ...keys) {
             if (!item) return '';
             const lowerKeyMap = Object.keys(item).reduce((map, key) => {
@@ -314,8 +318,11 @@
             return `
                 <div class="admin-editable relative rounded-xl overflow-hidden shadow-sm aspect-[4/3] bg-stone-200 group border border-stone-200">
                     <img src="${escapeHtml(finalUrl)}" class="w-full h-full object-cover" alt="${escapeHtml(description || `תמונה במיקום ${finalLocation}`)}">
-                    <div class="admin-overlay" role="button" tabindex="0" aria-label="החלפת תמונה במיקום ${escapeHtml(finalLocation)}" onclick="triggerReplace('${escapeJsString(imageId)}', '${escapeJsString(finalLocation)}')" onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault(); triggerReplace('${escapeJsString(imageId)}', '${escapeJsString(finalLocation)}');}">
-                        <span class="text-white bg-black/50 px-3 py-2 rounded-xl text-xs font-medium"><i class="fa-solid fa-camera ml-1"></i> החלף תמונה</span>
+                    <div class="admin-overlay" aria-label="פעולות תמונה במיקום ${escapeHtml(finalLocation)}">
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <button type="button" onclick="triggerReplace('${escapeJsAttrString(imageId)}', '${escapeJsAttrString(finalLocation)}')" class="text-white bg-black/60 px-3 py-2 rounded-xl text-xs font-medium hover:bg-black/80 transition" aria-label="החלפת תמונה במיקום ${escapeHtml(finalLocation)}"><i class="fa-solid fa-camera ml-1"></i> החלף</button>
+                            <button type="button" onclick="deleteImageRow('${escapeJsAttrString(imageId)}')" class="text-white bg-red-700/90 px-3 py-2 rounded-xl text-xs font-medium hover:bg-red-800 transition" aria-label="הסרת תמונה במיקום ${escapeHtml(finalLocation)}"><i class="fa-solid fa-trash ml-1"></i> הסר</button>
+                        </div>
                     </div>
                     <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded z-10 font-mono select-none">ID: ${escapeHtml(imageId)}</div>
                 </div>
@@ -345,8 +352,9 @@
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-md font-semibold text-stone-700">${escapeHtml(name || code)} <span class="font-mono text-[11px] text-stone-400">(${escapeHtml(code)})</span></h3>
                             <div class="flex gap-2">
-                                <button type="button" onclick="editInspiration('${escapeJsString(rowId)}')" class="text-xs bg-white border border-purple-200 text-purple-800 px-3 py-1 rounded-lg hover:bg-purple-100 transition cursor-pointer" aria-label="עריכת קולקציית ${escapeHtml(name || code)}">ערוך קולקציה</button>
-                                <button type="button" onclick="triggerAddNew('${escapeJsString(code)}')" class="text-xs bg-stone-100 text-stone-800 px-3 py-1 rounded-lg hover:bg-stone-200 transition cursor-pointer" aria-label="הוספת תמונה לקולקציית ${escapeHtml(name || code)}"><i class="fa-solid fa-plus ml-1"></i> הוסף תמונה</button>
+                                <button type="button" onclick="editInspiration('${escapeJsAttrString(rowId)}')" class="text-xs bg-white border border-purple-200 text-purple-800 px-3 py-1 rounded-lg hover:bg-purple-100 transition cursor-pointer" aria-label="עריכת קולקציית ${escapeHtml(name || code)}">ערוך קולקציה</button>
+                                <button type="button" onclick="deletePackageRow('${escapeJsAttrString(rowId)}', '${escapeJsAttrString(name || code)}', 'collection')" class="text-xs bg-red-50 border border-red-200 text-red-700 px-3 py-1 rounded-lg hover:bg-red-100 transition cursor-pointer" aria-label="הסרת קולקציית ${escapeHtml(name || code)}">הסר</button>
+                                <button type="button" onclick="triggerAddNew('${escapeJsAttrString(code)}')" class="text-xs bg-stone-100 text-stone-800 px-3 py-1 rounded-lg hover:bg-stone-200 transition cursor-pointer" aria-label="הוספת תמונה לקולקציית ${escapeHtml(name || code)}"><i class="fa-solid fa-plus ml-1"></i> הוסף תמונה</button>
                             </div>
                         </div>
                         <div class="grid grid-cols-3 gap-3">
@@ -411,6 +419,63 @@
             currentTargetLocation = location;
             isUpdateMode = false;
             fileInput.click();
+        }
+
+        async function deleteImageRow(rowId) {
+            if (!rowId) {
+                showStatus('לא נמצא מזהה תמונה למחיקה.', true);
+                return;
+            }
+            if (!confirm('האם להסיר את התמונה מהאתר ומהגיליון? הפעולה לא מוחקת את הקובץ מ-Cloudinary.')) return;
+            showStatus('מסיר תמונה מהגיליון...');
+            try {
+                const response = await fetch(`${SHEETY_API_URL}/${rowId}`, {
+                    method: 'DELETE',
+                    headers: getAdminHeaders()
+                });
+                ensureAuthorizedResponse(response);
+                if (!response.ok) throw new Error(`Image DELETE failed: ${response.status}`);
+                if (currentTargetId?.toString() === rowId.toString()) currentTargetId = null;
+                await fetchAndRenderData();
+                showStatus('התמונה הוסרה בהצלחה מהאתר.', false);
+            } catch (error) {
+                if (error instanceof UnauthorizedAdminError) {
+                    handleUnauthorizedAdmin();
+                    return;
+                }
+                console.error('Error deleting image row:', error);
+                showStatus('שגיאה במחיקת התמונה. נסו שוב או בדקו הרשאות.', true);
+            }
+        }
+
+        async function deletePackageRow(rowId, label, type = 'package') {
+            if (!rowId) {
+                showStatus('לא נמצא מזהה שורה למחיקה.', true);
+                return;
+            }
+            const itemLabel = label || rowId;
+            const itemType = type === 'collection' ? 'הקולקציה' : 'החבילה';
+            if (!confirm(`האם להסיר את ${itemType} ״${itemLabel}״ מהאתר ומהגיליון?`)) return;
+            showStatus(`מסיר את ${itemType} מהגיליון...`);
+            try {
+                const response = await fetch(`${SHEETY_PACKAGES_API_URL}/${rowId}`, {
+                    method: 'DELETE',
+                    headers: getAdminHeaders()
+                });
+                ensureAuthorizedResponse(response);
+                if (!response.ok) throw new Error(`Package DELETE failed: ${response.status}`);
+                if (getInputValue('inspiration-row-id') === rowId.toString()) resetInspirationForm();
+                if (getInputValue('sale-package-row-id') === rowId.toString()) resetSalePackageForm();
+                await fetchAndRenderPackages();
+                showStatus(`${itemType} הוסרה בהצלחה.`, false);
+            } catch (error) {
+                if (error instanceof UnauthorizedAdminError) {
+                    handleUnauthorizedAdmin();
+                    return;
+                }
+                console.error('Error deleting package row:', error);
+                showStatus('שגיאה במחיקה. נסו שוב או בדקו הרשאות.', true);
+            }
         }
 
         fileInput.addEventListener('change', async (e) => {
@@ -677,7 +742,10 @@
                                 <h3 class="font-bold text-stone-800">${escapeHtml(name || '')}</h3>
                                 ${price ? `<div class="text-emerald-700 font-bold">${escapeHtml(price)}</div>` : ''}
                             </div>
-                            <button type="button" onclick="editSalePackage('${escapeJsString(rowId)}')" class="text-xs bg-white border border-stone-200 px-3 py-1 rounded-lg hover:bg-stone-100" aria-label="עריכת חבילת ${escapeHtml(name || code)}">ערוך חבילה</button>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="editSalePackage('${escapeJsAttrString(rowId)}')" class="text-xs bg-white border border-stone-200 px-3 py-1 rounded-lg hover:bg-stone-100" aria-label="עריכת חבילת ${escapeHtml(name || code)}">ערוך חבילה</button>
+                                <button type="button" onclick="deletePackageRow('${escapeJsAttrString(rowId)}', '${escapeJsAttrString(name || code)}', 'package')" class="text-xs bg-red-50 border border-red-200 text-red-700 px-3 py-1 rounded-lg hover:bg-red-100" aria-label="הסרת חבילת ${escapeHtml(name || code)}">הסר</button>
+                            </div>
                         </div>
                         <p class="text-xs text-stone-600 whitespace-pre-line">${escapeHtml(description || '')}</p>
                     </article>
