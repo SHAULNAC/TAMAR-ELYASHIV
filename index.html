@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
+    <meta name="google-site-verification" content="5Ijm6oOvpog27tdk4llUMkNuvj1Cmkah3zSgOa-lbv8" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TAMAR ELYASHIV | צילום אמנותי - רגעים אמיתיים</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.turnstileApiReady = false;
+        window.onTurnstileApiReady = function () {
+            window.turnstileApiReady = true;
+            window.dispatchEvent(new Event('turnstile-ready'));
+        };
+    </script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileApiReady" async defer></script>
     <!-- פונטים מבית גוגל עבור טיפוגרפיה עברית ולטינית יוקרתית -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -196,6 +205,9 @@
           initial-value: 0;
         }
 
+        .aperture-logo-wrapper.aperture-nav {
+          --aperture-progress: 0;
+        }
         .aperture-logo-wrapper.aperture-nav svg.aperture-animated-svg path {
           transition: transform .08s linear;
         }
@@ -454,11 +466,26 @@
         }
         .image-lightbox__thumbs {
             display: flex;
+            justify-content: center;
             gap: .65rem;
+            width: fit-content;
+            max-width: 100%;
+            margin-inline: auto;
             overflow-x: auto;
             overscroll-behavior-inline: contain;
             padding: .25rem .15rem .55rem;
             scrollbar-color: #C2A391 rgba(245,235,230,.75);
+            opacity: 0;
+            transform: translateY(14px) scale(.98);
+        }
+        .image-lightbox.is-open .image-lightbox__thumbs {
+            animation: lightboxThumbRailIn .48s .16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes lightboxThumbRailIn {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
         .image-lightbox__thumb {
             flex: 0 0 76px;
@@ -470,6 +497,16 @@
             background: #F4EFEA;
             opacity: .72;
             transition: opacity .25s ease, transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+        }
+        .image-lightbox.is-open .image-lightbox__thumb {
+            animation: lightboxThumbIn .4s cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation-delay: calc(.2s + (var(--thumb-index, 0) * 40ms));
+        }
+        @keyframes lightboxThumbIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(.94);
+            }
         }
         .image-lightbox__thumb:hover,
         .image-lightbox__thumb.is-active {
@@ -826,7 +863,7 @@
                     <div class="text-center border-t md:border-t-0 md:border-r border-mocha-100 pt-6 md:pt-0">
                         <span class="block text-[10px] text-mocha-500 font-bold uppercase">הערכת מחיר כוללת:</span>
                         <span id="estimated-total" class="text-3xl font-serif font-bold text-mocha-900 block my-1">—</span>
-                        <a href="#contact" class="text-xs text-accentRose hover:text-mocha-800 font-bold transition-colors">בואו נשריין את הסשן שלכם ✦</a>
+                        <a href="#contact" onclick="applyEstimatorToContactForm()" class="text-xs text-accentRose hover:text-mocha-800 font-bold transition-colors">בואו נשריין את הסשן שלכם ✦</a>
                     </div>
                 </div>
             </div>
@@ -888,6 +925,7 @@
 
                     <!-- אזור משוב במקום חלונית אלרט מעצבנת -->
                     <div id="form-feedback" class="hidden text-center p-4 rounded-xl text-xs font-semibold"></div>
+                    <div id="turnstile-widget" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;"></div>
 
                     <div class="text-center pt-2">
                         <button type="submit" class="w-full sm:w-auto bg-mocha-800 hover:bg-mocha-700 text-cream-100 font-bold px-12 py-4 rounded-full text-xs tracking-wider uppercase shadow hover:shadow-md transition-all duration-300">
@@ -981,6 +1019,7 @@
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const timers = new Map();
         const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyT_A5OTY7jkaY4Etd46EV4ZPpMDHkK0MBw4-OCy5Tn8GvugSrRARqlDFlgcsPHTn2x5w/exec';
+        const TURNSTILE_SITE_KEY = '1x00000000000000000000BB'; // מפתח בדיקה שקוף של Cloudflare; להחליף למפתח האתר האמיתי בפרודקשן
         
         const SHEETY_IMAGES_API_URL = 'https://plain-frost-bb26.l055673085.workers.dev/siteImages';
         const SHEETY_PACKAGES_API_URL = 'https://plain-frost-bb26.l055673085.workers.dev/packages';
@@ -1080,7 +1119,7 @@
                 <button type="button" class="image-lightbox__dot${index === lightboxState.index ? ' is-active' : ''}" aria-label="עבור לתמונה ${index + 1}" onclick="setLightboxImage(${index})"></button>
             `).join('');
             thumbs.innerHTML = lightboxState.images.map((src, index) => `
-                <button type="button" class="image-lightbox__thumb${index === lightboxState.index ? ' is-active' : ''}" aria-label="פתח תמונה ${index + 1}" onclick="setLightboxImage(${index})">
+                <button type="button" class="image-lightbox__thumb${index === lightboxState.index ? ' is-active' : ''}" style="--thumb-index: ${index}" aria-label="פתח תמונה ${index + 1}" onclick="setLightboxImage(${index})">
                     <img src="${escapeHtml(src)}" alt="תמונה ממוזערת ${index + 1}" loading="lazy">
                 </button>
             `).join('');
@@ -1154,8 +1193,8 @@
 
         function initializeImageLightbox() {
             document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
-            document.getElementById('lightbox-prev')?.addEventListener('click', () => moveLightbox(-1));
-            document.getElementById('lightbox-next')?.addEventListener('click', () => moveLightbox(1));
+            document.getElementById('lightbox-prev')?.addEventListener('click', () => moveLightbox(1));
+            document.getElementById('lightbox-next')?.addEventListener('click', () => moveLightbox(-1));
             document.getElementById('image-lightbox')?.addEventListener('click', (event) => {
                 if (event.target.id === 'image-lightbox') closeLightbox();
             });
@@ -1163,8 +1202,8 @@
                 const modal = document.getElementById('image-lightbox');
                 if (!modal?.classList.contains('is-open')) return;
                 if (event.key === 'Escape') closeLightbox();
-                if (event.key === 'ArrowLeft') moveLightbox(-1);
-                if (event.key === 'ArrowRight') moveLightbox(1);
+                if (event.key === 'ArrowLeft') moveLightbox(1);
+                if (event.key === 'ArrowRight') moveLightbox(-1);
             });
         }
 
@@ -1392,32 +1431,51 @@
             window.setTimeout(() => loader?.setAttribute('aria-hidden', 'true'), 600);
         }
 
+        function getInitialDataValue(key) {
+            if (!window.__INITIAL_DATA__ || !Object.prototype.hasOwnProperty.call(window.__INITIAL_DATA__, key)) return undefined;
+            return window.__INITIAL_DATA__[key];
+        }
+
+        function getImageRows(data) {
+            if (Array.isArray(data)) return data;
+            return data?.siteImages || data?.siteimages || data?.["siteImages"] || data?.["siteimages"] || [];
+        }
+
+        async function renderSiteImagesFromRows(rows) {
+            const byLocation = rows.reduce((acc, row) => {
+                const location = getSheetLocation(row);
+                const src = normalizeSheetImage(row);
+                if (!location || !src) return acc;
+                if (!acc[location]) acc[location] = [];
+                acc[location].push(src);
+                return acc;
+            }, {});
+
+            const heroImages = byLocation.hero || [];
+            await preloadImages(heroImages.slice(0, 3));
+            renderHeroImages(heroImages);
+            renderGalleryImages(byLocation.gallery_newborn || [], byLocation.gallery_outdoor || []);
+            const collectionImageSets = Object.keys(byLocation).reduce((sets, location) => {
+                if (['hero', 'gallery_newborn', 'gallery_outdoor'].includes(location)) return sets;
+                const key = location.replace(/^onestyle_/, '');
+                sets[key] = [...(sets[key] || []), ...byLocation[location]];
+                return sets;
+            }, {});
+            updateDynamicCollectionImages(collectionImageSets);
+        }
+
         async function loadSiteImages() {
+            const initialImages = getInitialDataValue('images');
+            if (initialImages != null) {
+                await renderSiteImagesFromRows(getImageRows(initialImages));
+                return;
+            }
+
             try {
                 const response = await fetch(SHEETY_IMAGES_API_URL);
                 if (!response.ok) throw new Error(`Sheety returned ${response.status}`);
                 const data = await response.json();
-                const rows = data.siteImages || data.siteimages || data["siteImages"] || data["siteimages"] || [];
-                const byLocation = rows.reduce((acc, row) => {
-                    const location = getSheetLocation(row);
-                    const src = normalizeSheetImage(row);
-                    if (!location || !src) return acc;
-                    if (!acc[location]) acc[location] = [];
-                    acc[location].push(src);
-                    return acc;
-                }, {});
-
-                const heroImages = byLocation.hero || [];
-                await preloadImages(heroImages.slice(0, 3));
-                renderHeroImages(heroImages);
-                renderGalleryImages(byLocation.gallery_newborn || [], byLocation.gallery_outdoor || []);
-                const collectionImageSets = Object.keys(byLocation).reduce((sets, location) => {
-                    if (['hero', 'gallery_newborn', 'gallery_outdoor'].includes(location)) return sets;
-                    const key = location.replace(/^onestyle_/, '');
-                    sets[key] = [...(sets[key] || []), ...byLocation[location]];
-                    return sets;
-                }, {});
-                updateDynamicCollectionImages(collectionImageSets);
+                await renderSiteImagesFromRows(getImageRows(data));
             } catch (error) {
                 console.error('Failed to load dynamic images from Sheety:', error);
             }
@@ -1467,9 +1525,16 @@
             return `col-btn-${encodeURIComponent(code)}`;
         }
 
+        function normalizeCollectionColor(value, fallback) {
+            const raw = (value || '').toString().trim();
+            if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toUpperCase();
+            if (/^[0-9a-fA-F]{6}$/.test(raw)) return `#${raw.toUpperCase()}`;
+            return raw || fallback;
+        }
+
         function normalizeCollection(row, index = 0) {
             const pkg = normalizePackage(row);
-            const color = packagePaletteColor(index);
+            const color = normalizeCollectionColor(getCollectionField(row, 'color', pkg.color), packagePaletteColor(index));
             const hashtags = getCollectionField(row, 'hashtags', '').split(',').map(tag => tag.trim()).filter(Boolean);
             return {
                 ...pkg,
@@ -1591,7 +1656,8 @@
         }
 
         function getPackageRows(data) {
-            return data.packages || data.Packages || [];
+            if (Array.isArray(data)) return data;
+            return data?.packages || data?.Packages || [];
         }
 
         function normalizePackage(pkg) {
@@ -1671,14 +1737,23 @@
             document.querySelectorAll('#packages-grid .icon-spin-appear').forEach(el => observer.observe(el));
         }
 
+        function renderPackageRows(rows) {
+            renderOneStyleCollections(rows.filter(isInspirationStatus).map((row, index) => normalizeCollection(row, index)).filter(item => item.code && item.name));
+            renderPackages(rows.filter(isSaleStatus));
+        }
+
         async function loadPackages() {
+            const initialPackages = getInitialDataValue('packages');
+            if (initialPackages != null) {
+                renderPackageRows(getPackageRows(initialPackages));
+                return;
+            }
+
             try {
                 const response = await fetch(SHEETY_PACKAGES_API_URL);
                 if (!response.ok) throw new Error(`Sheety packages returned ${response.status}`);
                 const data = await response.json();
-                const rows = getPackageRows(data);
-                renderOneStyleCollections(rows.filter(isInspirationStatus).map((row, index) => normalizeCollection(row, index)).filter(item => item.code && item.name));
-                renderPackages(rows.filter(isSaleStatus));
+                renderPackageRows(getPackageRows(data));
             } catch (error) {
                 console.error('Failed to load packages from Sheety:', error);
                 const grid = document.getElementById('packages-grid');
@@ -1691,6 +1766,44 @@
             const selectEl = document.getElementById('package-choice');
             if (!selectEl) return;
             selectEl.value = packageCode;
+        }
+
+
+        function getEstimatorSelectionDetails() {
+            calculateEstimate();
+            const estimator = document.getElementById('estimator-type');
+            const selectedIndex = Math.max(0, estimator?.selectedIndex ?? 0);
+            const selectedPackage = (window.availablePackages || [])[selectedIndex];
+            const selectedLabel = estimator?.selectedOptions[0]?.textContent.trim() || selectedPackage?.name || 'התייעצות כללית';
+            const addOns = [
+                document.getElementById('add-album')?.checked ? 'אלבום דיגיטלי יוקרתי ומעוצב' : '',
+                document.getElementById('add-prints')?.checked ? 'הדפסות פיין-ארט אמנותיות' : ''
+            ].filter(Boolean);
+
+            return {
+                packageCode: selectedPackage?.code || 'general',
+                packageLabel: selectedLabel,
+                addOns,
+                budget: document.getElementById('estimated-total')?.innerText.trim() || ''
+            };
+        }
+
+        function applyEstimatorToContactForm() {
+            const details = getEstimatorSelectionDetails();
+            const packageSelect = document.getElementById('package-choice');
+            const message = document.getElementById('message');
+
+            if (packageSelect) {
+                packageSelect.value = [...packageSelect.options].some(option => option.value === details.packageCode) ? details.packageCode : 'general';
+            }
+
+            if (message) {
+                const addOnsText = details.addOns.length ? details.addOns.join(', ') : 'ללא תוספות';
+                message.value = `בחירה מהמחשבון:
+חבילה / סגנון: ${details.packageLabel}
+תוספות: ${addOnsText}
+הערכת מחיר כוללת: ${details.budget}`;
+            }
         }
 
         function getSelectedPackageName() {
@@ -1713,6 +1826,61 @@
         function getCalculatedBudget() {
             calculateEstimate();
             return document.getElementById('estimated-total')?.innerText.trim() || '';
+        }
+
+
+        let turnstileWidgetId = null;
+        let pendingTurnstileChallenge = null;
+
+        function initializeTurnstile() {
+            const widgetContainer = document.getElementById('turnstile-widget');
+            if (!widgetContainer || turnstileWidgetId !== null || !window.turnstile) return;
+
+            turnstileWidgetId = window.turnstile.render(widgetContainer, {
+                sitekey: TURNSTILE_SITE_KEY,
+                size: 'invisible',
+                callback: (token) => {
+                    pendingTurnstileChallenge?.resolve(token);
+                    pendingTurnstileChallenge = null;
+                },
+                'error-callback': () => {
+                    pendingTurnstileChallenge?.reject(new Error('Turnstile challenge failed'));
+                    pendingTurnstileChallenge = null;
+                },
+                'expired-callback': () => {
+                    pendingTurnstileChallenge?.reject(new Error('Turnstile challenge expired'));
+                    pendingTurnstileChallenge = null;
+                }
+            });
+        }
+
+        function getTurnstileToken() {
+            initializeTurnstile();
+
+            return new Promise((resolve, reject) => {
+                if (!window.turnstile || turnstileWidgetId === null) {
+                    reject(new Error('Turnstile is not ready'));
+                    return;
+                }
+
+                const timeoutId = window.setTimeout(() => {
+                    pendingTurnstileChallenge = null;
+                    reject(new Error('Turnstile challenge timed out'));
+                }, 15000);
+
+                pendingTurnstileChallenge = {
+                    resolve: (token) => {
+                        window.clearTimeout(timeoutId);
+                        resolve(token);
+                    },
+                    reject: (error) => {
+                        window.clearTimeout(timeoutId);
+                        reject(error);
+                    }
+                };
+                window.turnstile.reset(turnstileWidgetId);
+                window.turnstile.execute(turnstileWidgetId);
+            });
         }
 
         function setFormFeedback(type, message) {
@@ -1747,6 +1915,8 @@
             }
 
             try {
+                data.turnstileToken = await getTurnstileToken();
+
                 await fetch(APPS_SCRIPT_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -1818,7 +1988,7 @@
         }, { threshold: 0.2 });
         apertureTriggers.forEach(el => apertureOnceObserver.observe(el));
 
-        // אנימציית צמצם בסרגל עליון: פתיחה ליניארית לפי התקדמות הגלילה בעמוד כולו
+        // אנימציית צמצם בסרגל עליון: מתחיל פתוח ונסגר ליניארית לפי התקדמות הגלילה בעמוד כולו
         const navAperture = document.querySelector('.aperture-logo-wrapper.aperture-nav');
         let navScrollFrame = null;
         function updateNavApertureByScroll() {
@@ -1827,11 +1997,10 @@
             const doc = document.documentElement;
             const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
             const pageProgress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
-            const apertureProgress = 1 - pageProgress;
-            navAperture.style.setProperty('--aperture-progress', apertureProgress.toFixed(4));
+            navAperture.style.setProperty('--aperture-progress', pageProgress.toFixed(4));
         }
         function scheduleNavApertureUpdate() {
-            if (navScrollFrame !== null || prefersReducedMotion) return;
+            if (navScrollFrame !== null) return;
             navScrollFrame = window.requestAnimationFrame(updateNavApertureByScroll);
         }
         window.addEventListener('scroll', scheduleNavApertureUpdate, { passive: true });
@@ -1904,6 +2073,8 @@
 
             initializeSiteSounds();
             initializeImageLightbox();
+            initializeTurnstile();
+            window.addEventListener('turnstile-ready', initializeTurnstile, { once: true });
             document.getElementById('lead-form')?.addEventListener('submit', handleFormSubmit);
             Promise.allSettled([loadSiteImages(), loadPackages()]).finally(() => hideLoadingScreen());
         });
