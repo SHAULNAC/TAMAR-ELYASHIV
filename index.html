@@ -462,11 +462,26 @@
         }
         .image-lightbox__thumbs {
             display: flex;
+            justify-content: center;
             gap: .65rem;
+            width: fit-content;
+            max-width: 100%;
+            margin-inline: auto;
             overflow-x: auto;
             overscroll-behavior-inline: contain;
             padding: .25rem .15rem .55rem;
             scrollbar-color: #C2A391 rgba(245,235,230,.75);
+            opacity: 0;
+            transform: translateY(14px) scale(.98);
+        }
+        .image-lightbox.is-open .image-lightbox__thumbs {
+            animation: lightboxThumbRailIn .48s .16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes lightboxThumbRailIn {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
         .image-lightbox__thumb {
             flex: 0 0 76px;
@@ -478,6 +493,16 @@
             background: #F4EFEA;
             opacity: .72;
             transition: opacity .25s ease, transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+        }
+        .image-lightbox.is-open .image-lightbox__thumb {
+            animation: lightboxThumbIn .4s cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation-delay: calc(.2s + (var(--thumb-index, 0) * 40ms));
+        }
+        @keyframes lightboxThumbIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(.94);
+            }
         }
         .image-lightbox__thumb:hover,
         .image-lightbox__thumb.is-active {
@@ -834,7 +859,7 @@
                     <div class="text-center border-t md:border-t-0 md:border-r border-mocha-100 pt-6 md:pt-0">
                         <span class="block text-[10px] text-mocha-500 font-bold uppercase">הערכת מחיר כוללת:</span>
                         <span id="estimated-total" class="text-3xl font-serif font-bold text-mocha-900 block my-1">—</span>
-                        <a href="#contact" class="text-xs text-accentRose hover:text-mocha-800 font-bold transition-colors">בואו נשריין את הסשן שלכם ✦</a>
+                        <a href="#contact" onclick="applyEstimatorToContactForm()" class="text-xs text-accentRose hover:text-mocha-800 font-bold transition-colors">בואו נשריין את הסשן שלכם ✦</a>
                     </div>
                 </div>
             </div>
@@ -1090,7 +1115,7 @@
                 <button type="button" class="image-lightbox__dot${index === lightboxState.index ? ' is-active' : ''}" aria-label="עבור לתמונה ${index + 1}" onclick="setLightboxImage(${index})"></button>
             `).join('');
             thumbs.innerHTML = lightboxState.images.map((src, index) => `
-                <button type="button" class="image-lightbox__thumb${index === lightboxState.index ? ' is-active' : ''}" aria-label="פתח תמונה ${index + 1}" onclick="setLightboxImage(${index})">
+                <button type="button" class="image-lightbox__thumb${index === lightboxState.index ? ' is-active' : ''}" style="--thumb-index: ${index}" aria-label="פתח תמונה ${index + 1}" onclick="setLightboxImage(${index})">
                     <img src="${escapeHtml(src)}" alt="תמונה ממוזערת ${index + 1}" loading="lazy">
                 </button>
             `).join('');
@@ -1164,8 +1189,8 @@
 
         function initializeImageLightbox() {
             document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
-            document.getElementById('lightbox-prev')?.addEventListener('click', () => moveLightbox(-1));
-            document.getElementById('lightbox-next')?.addEventListener('click', () => moveLightbox(1));
+            document.getElementById('lightbox-prev')?.addEventListener('click', () => moveLightbox(1));
+            document.getElementById('lightbox-next')?.addEventListener('click', () => moveLightbox(-1));
             document.getElementById('image-lightbox')?.addEventListener('click', (event) => {
                 if (event.target.id === 'image-lightbox') closeLightbox();
             });
@@ -1173,8 +1198,8 @@
                 const modal = document.getElementById('image-lightbox');
                 if (!modal?.classList.contains('is-open')) return;
                 if (event.key === 'Escape') closeLightbox();
-                if (event.key === 'ArrowLeft') moveLightbox(-1);
-                if (event.key === 'ArrowRight') moveLightbox(1);
+                if (event.key === 'ArrowLeft') moveLightbox(1);
+                if (event.key === 'ArrowRight') moveLightbox(-1);
             });
         }
 
@@ -1730,6 +1755,44 @@
             const selectEl = document.getElementById('package-choice');
             if (!selectEl) return;
             selectEl.value = packageCode;
+        }
+
+
+        function getEstimatorSelectionDetails() {
+            calculateEstimate();
+            const estimator = document.getElementById('estimator-type');
+            const selectedIndex = Math.max(0, estimator?.selectedIndex ?? 0);
+            const selectedPackage = (window.availablePackages || [])[selectedIndex];
+            const selectedLabel = estimator?.selectedOptions[0]?.textContent.trim() || selectedPackage?.name || 'התייעצות כללית';
+            const addOns = [
+                document.getElementById('add-album')?.checked ? 'אלבום דיגיטלי יוקרתי ומעוצב' : '',
+                document.getElementById('add-prints')?.checked ? 'הדפסות פיין-ארט אמנותיות' : ''
+            ].filter(Boolean);
+
+            return {
+                packageCode: selectedPackage?.code || 'general',
+                packageLabel: selectedLabel,
+                addOns,
+                budget: document.getElementById('estimated-total')?.innerText.trim() || ''
+            };
+        }
+
+        function applyEstimatorToContactForm() {
+            const details = getEstimatorSelectionDetails();
+            const packageSelect = document.getElementById('package-choice');
+            const message = document.getElementById('message');
+
+            if (packageSelect) {
+                packageSelect.value = [...packageSelect.options].some(option => option.value === details.packageCode) ? details.packageCode : 'general';
+            }
+
+            if (message) {
+                const addOnsText = details.addOns.length ? details.addOns.join(', ') : 'ללא תוספות';
+                message.value = `בחירה מהמחשבון:
+חבילה / סגנון: ${details.packageLabel}
+תוספות: ${addOnsText}
+הערכת מחיר כוללת: ${details.budget}`;
+            }
         }
 
         function getSelectedPackageName() {
