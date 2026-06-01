@@ -373,10 +373,8 @@
 
                 const cloudinaryResponse = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
                     method: 'POST',
-                    headers: { 'X-Admin-Token': userPassword },
                     body: formData
                 });
-                ensureAuthorizedResponse(cloudinaryResponse);
                 const cloudinaryData = await cloudinaryResponse.json();
                 
                 if (!cloudinaryData.secure_url) {

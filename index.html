@@ -6,6 +6,14 @@
     <title>TAMAR ELYASHIV | צילום אמנותי - רגעים אמיתיים</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.turnstileApiReady = false;
+        window.onTurnstileApiReady = function () {
+            window.turnstileApiReady = true;
+            window.dispatchEvent(new Event('turnstile-ready'));
+        };
+    </script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileApiReady" async defer></script>
     <!-- פונטים מבית גוגל עבור טיפוגרפיה עברית ולטינית יוקרתית -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -888,6 +896,7 @@
 
                     <!-- אזור משוב במקום חלונית אלרט מעצבנת -->
                     <div id="form-feedback" class="hidden text-center p-4 rounded-xl text-xs font-semibold"></div>
+                    <div id="turnstile-widget" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;"></div>
 
                     <div class="text-center pt-2">
                         <button type="submit" class="w-full sm:w-auto bg-mocha-800 hover:bg-mocha-700 text-cream-100 font-bold px-12 py-4 rounded-full text-xs tracking-wider uppercase shadow hover:shadow-md transition-all duration-300">
@@ -981,6 +990,7 @@
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const timers = new Map();
         const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyT_A5OTY7jkaY4Etd46EV4ZPpMDHkK0MBw4-OCy5Tn8GvugSrRARqlDFlgcsPHTn2x5w/exec';
+        const TURNSTILE_SITE_KEY = '1x00000000000000000000BB'; // מפתח בדיקה שקוף של Cloudflare; להחליף למפתח האתר האמיתי בפרודקשן
         
         const SHEETY_IMAGES_API_URL = 'https://plain-frost-bb26.l055673085.workers.dev/siteImages';
         const SHEETY_PACKAGES_API_URL = 'https://plain-frost-bb26.l055673085.workers.dev/packages';
@@ -1715,6 +1725,61 @@
             return document.getElementById('estimated-total')?.innerText.trim() || '';
         }
 
+
+        let turnstileWidgetId = null;
+        let pendingTurnstileChallenge = null;
+
+        function initializeTurnstile() {
+            const widgetContainer = document.getElementById('turnstile-widget');
+            if (!widgetContainer || turnstileWidgetId !== null || !window.turnstile) return;
+
+            turnstileWidgetId = window.turnstile.render(widgetContainer, {
+                sitekey: TURNSTILE_SITE_KEY,
+                size: 'invisible',
+                callback: (token) => {
+                    pendingTurnstileChallenge?.resolve(token);
+                    pendingTurnstileChallenge = null;
+                },
+                'error-callback': () => {
+                    pendingTurnstileChallenge?.reject(new Error('Turnstile challenge failed'));
+                    pendingTurnstileChallenge = null;
+                },
+                'expired-callback': () => {
+                    pendingTurnstileChallenge?.reject(new Error('Turnstile challenge expired'));
+                    pendingTurnstileChallenge = null;
+                }
+            });
+        }
+
+        function getTurnstileToken() {
+            initializeTurnstile();
+
+            return new Promise((resolve, reject) => {
+                if (!window.turnstile || turnstileWidgetId === null) {
+                    reject(new Error('Turnstile is not ready'));
+                    return;
+                }
+
+                const timeoutId = window.setTimeout(() => {
+                    pendingTurnstileChallenge = null;
+                    reject(new Error('Turnstile challenge timed out'));
+                }, 15000);
+
+                pendingTurnstileChallenge = {
+                    resolve: (token) => {
+                        window.clearTimeout(timeoutId);
+                        resolve(token);
+                    },
+                    reject: (error) => {
+                        window.clearTimeout(timeoutId);
+                        reject(error);
+                    }
+                };
+                window.turnstile.reset(turnstileWidgetId);
+                window.turnstile.execute(turnstileWidgetId);
+            });
+        }
+
         function setFormFeedback(type, message) {
             const feedback = document.getElementById('form-feedback');
             feedback.classList.remove('hidden', 'bg-cream-100', 'text-mocha-800', 'border-mocha-200', 'bg-accentRose', 'text-mocha-950', 'border-mocha-300');
@@ -1747,6 +1812,8 @@
             }
 
             try {
+                data.turnstileToken = await getTurnstileToken();
+
                 await fetch(APPS_SCRIPT_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -1904,6 +1971,8 @@
 
             initializeSiteSounds();
             initializeImageLightbox();
+            initializeTurnstile();
+            window.addEventListener('turnstile-ready', initializeTurnstile, { once: true });
             document.getElementById('lead-form')?.addEventListener('submit', handleFormSubmit);
             Promise.allSettled([loadSiteImages(), loadPackages()]).finally(() => hideLoadingScreen());
         });
