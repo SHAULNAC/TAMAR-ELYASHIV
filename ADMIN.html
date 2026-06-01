@@ -168,14 +168,13 @@
     </div>
 
     <script>
-        // הגנת סיסמה בסיסית לפני טעינת הדף
-        const password = prompt("אנא הזן סיסמת מנהל על מנת לערוך את האתר:");
-        if (password === "1111") {
-            document.body.style.display = "block";
-        } else {
-            alert("סיסמה שגויה! מועבר חזרה לדף הבית.");
-            window.location.href = "index.html";
+        // הסיסמה נבדקת בצד השרת בלבד על ידי Cloudflare Worker
+        let userPassword = localStorage.getItem('adminToken') || '';
+        if (!userPassword) {
+            userPassword = prompt("אנא הזן סיסמת מנהל על מנת לערוך את האתר:") || '';
+            localStorage.setItem('adminToken', userPassword);
         }
+        document.body.style.display = "block";
 
         const CLOUDINARY_CLOUD_NAME = "doihydrkg";
         const CLOUDINARY_PRESET = "ml_default";
@@ -198,6 +197,34 @@
         const fileInput = document.getElementById('admin-file-input');
         let adminImagesByLocation = {};
         let adminPackageRows = [];
+
+
+        class UnauthorizedAdminError extends Error {
+            constructor() {
+                super('Unauthorized admin token');
+                this.name = 'UnauthorizedAdminError';
+            }
+        }
+
+        function getAdminHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Admin-Token': userPassword
+            };
+        }
+
+        function handleUnauthorizedAdmin() {
+            alert("סיסמה שגויה או לא בתוקף. הגישה נדחתה.");
+            localStorage.removeItem('adminToken');
+            document.body.style.display = "none";
+            window.location.href = "index.html";
+        }
+
+        function ensureAuthorizedResponse(response) {
+            if (response.status === 401) {
+                throw new UnauthorizedAdminError();
+            }
+        }
 
         function showStatus(text, isLoading = true) {
             const statusDiv = document.getElementById('global-status');
@@ -346,8 +373,10 @@
 
                 const cloudinaryResponse = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
                     method: 'POST',
+                    headers: { 'X-Admin-Token': userPassword },
                     body: formData
                 });
+                ensureAuthorizedResponse(cloudinaryResponse);
                 const cloudinaryData = await cloudinaryResponse.json();
                 
                 if (!cloudinaryData.secure_url) {
@@ -375,16 +404,18 @@
 
                     let res = await fetch(`${SHEETY_API_URL}/${currentTargetId}`, {
                         method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getAdminHeaders(),
                         body: JSON.stringify(putBody1)
                     });
+                    ensureAuthorizedResponse(res);
                     
                     if (!res.ok) {
                         res = await fetch(`${SHEETY_API_URL}/${currentTargetId}`, {
                             method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: getAdminHeaders(),
                             body: JSON.stringify(putBody2)
                         });
+                        ensureAuthorizedResponse(res);
                     }
                     
                     if (!res.ok) throw new Error("Sheety PUT failed");
@@ -406,14 +437,18 @@
                         try {
                             const res = await fetch(SHEETY_API_URL, {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: getAdminHeaders(),
                                 body: JSON.stringify(option)
                             });
+                            ensureAuthorizedResponse(res);
                             if (res.ok) {
                                 success = true;
                                 break; 
                             }
                         } catch (err) {
+                            if (err instanceof UnauthorizedAdminError) {
+                                throw err;
+                            }
                             console.log("ניסיון מבנה נכשל, מנסה מבנה חלופי...");
                         }
                     }
@@ -426,6 +461,10 @@
                 fetchAndRenderData(); 
 
             } catch (error) {
+                if (error instanceof UnauthorizedAdminError) {
+                    handleUnauthorizedAdmin();
+                    return;
+                }
                 console.error("Error during upload pipeline:", error);
                 showStatus("אופס! קרתה שגיאה בתהליך ההעלאה או העדכון. ודא ששמות העמודות בשיטס שונו.", true);
             }
@@ -583,14 +622,19 @@
             try {
                 const response = await fetch(url, {
                     method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAdminHeaders(),
                     body: JSON.stringify({ package: payload })
                 });
+                ensureAuthorizedResponse(response);
                 if (!response.ok) throw new Error(`Sheety package ${method} failed`);
                 resetCallback();
                 await fetchAndRenderPackages();
                 showStatus(successMessage, false);
             } catch (error) {
+                if (error instanceof UnauthorizedAdminError) {
+                    handleUnauthorizedAdmin();
+                    return;
+                }
                 console.error("Error saving package row:", error);
                 showStatus("שגיאה בשמירה. ודא שהעמודות כוללות id, name, price, description, code, title, textcontent, color, clothing, hashtags, circletext, status ושמעטפת ה-JSON היא package.", true);
             }
