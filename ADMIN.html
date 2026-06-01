@@ -15,7 +15,12 @@
             display: flex; align-items: center; justify-content: center;
             opacity: 0; transition: opacity 0.2s ease; cursor: pointer; z-index: 40;
         }
-        .admin-editable:hover .admin-overlay { opacity: 1; }
+        .admin-editable:hover .admin-overlay,
+        .admin-editable:focus-within .admin-overlay { opacity: 1; }
+        .admin-overlay:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+            outline: 3px solid #f59e0b;
+            outline-offset: 3px;
+        }
         body { display: none; } /* מוסתר כברירת מחדל עד להזנת סיסמה */
     </style>
 </head>
@@ -31,17 +36,26 @@
 
     <div class="pt-16 max-w-7xl mx-auto p-6">
         
-        <div id="global-status" class="hidden fixed bottom-6 right-6 bg-stone-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 z-50">
+        <div id="global-status" class="hidden fixed bottom-6 right-6 bg-stone-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 z-50" role="status" aria-live="polite">
             <i class="fas fa-spinner animate-spin text-amber-400 text-xl" id="status-icon"></i>
             <span id="status-text" class="font-medium">טוען נתונים מהגיליון...</span>
         </div>
 
         <input type="file" id="admin-file-input" class="hidden" accept="image/*">
 
-        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+        <section class="mb-8 bg-amber-50 border border-amber-200 p-5 rounded-2xl shadow-sm" aria-labelledby="admin-guide-title">
+            <h2 id="admin-guide-title" class="text-lg font-bold text-stone-800 mb-3"><i class="fa-solid fa-circle-info text-amber-600 ml-2"></i>איך עובדים בדף הניהול?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-stone-700">
+                <div class="bg-white/80 border border-amber-100 rounded-xl p-3"><strong>תמונות:</strong> לחצו על תמונה קיימת כדי להחליף אותה, או על כפתור הוספה כדי ליצור שורה חדשה במיקום המתאים.</div>
+                <div class="bg-white/80 border border-amber-100 rounded-xl p-3"><strong>קולקציות ONE STYLE:</strong> לחיצה על ״ערוך קולקציה״ טוענת את השורה לטופס הסגול. לאחר השינוי לחצו ״שמור״ כדי לעדכן את אותה שורה.</div>
+                <div class="bg-white/80 border border-amber-100 rounded-xl p-3"><strong>חבילות מכירה:</strong> לחיצה על ״ערוך חבילה״ טוענת את החבילה לטופס הירוק. כפתור ״חבילה חדשה״ מנקה את מצב העריכה.</div>
+            </div>
+        </section>
+
+        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200" aria-labelledby="hero-admin-title">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-xl font-bold text-stone-700"><i class="fa-solid fa-desktop ml-2"></i> תמונות רקע ראשיות (Hero Slider)</h2>
-                <button onclick="triggerAddNew('hero')" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer">
+                <h2 id="hero-admin-title" class="text-xl font-bold text-stone-700"><i class="fa-solid fa-desktop ml-2"></i> תמונות רקע ראשיות (Hero Slider)</h2>
+                <button type="button" onclick="triggerAddNew('hero')" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer">
                     <i class="fa-solid fa-plus ml-1"></i> הוסף תמונת רקע ל-Hero
                 </button>
             </div>
@@ -50,12 +64,12 @@
                 </div>
         </section>
 
-        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200" aria-labelledby="gallery-admin-title">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-xl font-bold text-stone-700"><i class="fa-solid fa-images ml-2"></i> גלריית עבודות ראשית (ניו-בורן וחוץ)</h2>
+                <h2 id="gallery-admin-title" class="text-xl font-bold text-stone-700"><i class="fa-solid fa-images ml-2"></i> גלריית עבודות ראשית (ניו-בורן וחוץ)</h2>
                 <div class="flex gap-2">
-                    <button onclick="triggerAddNew('gallery_newborn')" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> הוסף לניו-בורן</button>
-                    <button onclick="triggerAddNew('gallery_outdoor')" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> הוסף לצילומי חוץ</button>
+                    <button type="button" onclick="triggerAddNew('gallery_newborn')" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> הוסף לניו-בורן</button>
+                    <button type="button" onclick="triggerAddNew('gallery_outdoor')" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> הוסף לצילומי חוץ</button>
                 </div>
             </div>
             
@@ -72,39 +86,43 @@
             </div>
         </section>
 
-        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200" aria-labelledby="inspiration-admin-title">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <div>
-                    <h2 class="text-xl font-bold text-stone-700"><i class="fa-solid fa-wand-magic-sparkles ml-2"></i> ניהול קולקציות השראה (ONE STYLE)</h2>
+                    <h2 id="inspiration-admin-title" class="text-xl font-bold text-stone-700"><i class="fa-solid fa-wand-magic-sparkles ml-2"></i> ניהול קולקציות השראה (ONE STYLE)</h2>
                     <p class="text-sm text-stone-500 mt-1">קולקציות עם <code class="bg-stone-100 px-1 rounded">status=inspiration</code> יוצגו בכרטיסיית ONE STYLE. התמונות משויכות לפי <code class="bg-stone-100 px-1 rounded">code</code>.</p>
                 </div>
-                <button onclick="resetInspirationForm()" class="bg-purple-700 text-white px-4 py-2 rounded-xl text-sm hover:bg-purple-800 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> קולקציה חדשה</button>
+                <button type="button" onclick="resetInspirationForm()" class="bg-purple-700 text-white px-4 py-2 rounded-xl text-sm hover:bg-purple-800 transition cursor-pointer" aria-label="פתיחת טופס קולקציית השראה חדשה"><i class="fa-solid fa-plus ml-1"></i> קולקציה חדשה</button>
             </div>
 
-            <form id="inspiration-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-purple-50/60 border border-purple-100 rounded-2xl p-4">
+            <form id="inspiration-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-purple-50/60 border border-purple-100 rounded-2xl p-4" aria-describedby="inspiration-form-help">
                 <input type="hidden" id="inspiration-row-id">
+                <div class="md:col-span-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-white/70 border border-purple-100 rounded-xl p-3">
+                    <p id="inspiration-form-help" class="text-xs text-stone-600"><strong>טופס קולקציה:</strong> הזינו code קבוע, טקסטים וצבע. במצב עריכה השמירה מעדכנת את השורה הקיימת.</p>
+                    <span id="inspiration-form-mode" class="text-xs font-bold text-purple-800 bg-purple-100 px-3 py-1 rounded-full">מצב: קולקציה חדשה</span>
+                </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 mb-1">Code לשיוך תמונות</label>
+                    <label for="inspiration-code" class="block text-xs font-bold text-stone-600 mb-1">Code לשיוך תמונות</label>
                     <input id="inspiration-code" required class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm ltr:text-left" placeholder="collection-code">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 mb-1">name — שם הקולקציה</label>
+                    <label for="inspiration-name" class="block text-xs font-bold text-stone-600 mb-1">name — שם הקולקציה</label>
                     <input id="inspiration-name" required class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="שם שיופיע בכפתור באתר">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-stone-600 mb-1">title — כותרת ראשית</label>
+                    <label for="inspiration-title" class="block text-xs font-bold text-stone-600 mb-1">title — כותרת ראשית</label>
                     <input id="inspiration-title" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="כותרת כרטיס הקולקציה">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-stone-600 mb-1">textcontent — טקסט קולקציה</label>
+                    <label for="inspiration-textcontent" class="block text-xs font-bold text-stone-600 mb-1">textcontent — טקסט קולקציה</label>
                     <textarea id="inspiration-textcontent" rows="3" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="פסקת התיאור הארוכה של קולקציית ההשראה"></textarea>
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-stone-600 mb-1">clothing — ביגוד וסטיילינג</label>
+                    <label for="inspiration-clothing" class="block text-xs font-bold text-stone-600 mb-1">clothing — ביגוד וסטיילינג</label>
                     <textarea id="inspiration-clothing" rows="3" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="המלצות לבוש וסטיילינג"></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 mb-1">color — צבע Hex</label>
+                    <label for="inspiration-color" class="block text-xs font-bold text-stone-600 mb-1">color — צבע Hex</label>
                     <div class="flex items-center gap-2">
                         <input id="inspiration-color" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm ltr:text-left" placeholder="#FED7AA">
                         <input id="inspiration-color-picker" type="color" value="#FED7AA" class="h-10 w-12 rounded-xl border border-stone-200 bg-white p-1 cursor-pointer" title="בחירת צבע">
@@ -112,11 +130,11 @@
                     <button type="button" onclick="pickScreenColor()" class="mt-2 w-full text-xs bg-white border border-purple-200 text-purple-800 px-3 py-2 rounded-xl hover:bg-purple-100 transition cursor-pointer"><i class="fa-solid fa-eye-dropper ml-1"></i> דגום צבע מהמסך</button>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 mb-1">circletext</label>
+                    <label for="inspiration-circletext" class="block text-xs font-bold text-stone-600 mb-1">circletext</label>
                     <input id="inspiration-circletext" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="טקסט קצר לעיגול">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-stone-600 mb-1">hashtags — מופרדים בפסיקים</label>
+                    <label for="inspiration-hashtags" class="block text-xs font-bold text-stone-600 mb-1">hashtags — מופרדים בפסיקים</label>
                     <input id="inspiration-hashtags" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="#בוהו,#טבעי">
                 </div>
                 <div class="md:col-span-2 flex items-end">
@@ -130,34 +148,38 @@
             </div>
         </section>
 
-        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+        <section class="mb-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-200" aria-labelledby="sale-admin-title">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <div>
-                    <h2 class="text-xl font-bold text-stone-700"><i class="fa-solid fa-box-open ml-2"></i> ניהול חבילות מכירה</h2>
+                    <h2 id="sale-admin-title" class="text-xl font-bold text-stone-700"><i class="fa-solid fa-box-open ml-2"></i> ניהול חבילות מכירה</h2>
                     <p class="text-sm text-stone-500 mt-1">חבילות עם <code class="bg-stone-100 px-1 rounded">status=sale</code> יוצגו באזור המחירון. <code class="bg-stone-100 px-1 rounded">code</code> נשמר לצרכים פנימיים בלבד.</p>
                 </div>
-                <button onclick="resetSalePackageForm()" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> חבילה חדשה</button>
+                <button type="button" onclick="resetSalePackageForm()" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition cursor-pointer" aria-label="פתיחת טופס חבילה חדשה"><i class="fa-solid fa-plus ml-1"></i> חבילה חדשה</button>
             </div>
 
-            <form id="sale-package-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-stone-50 border border-stone-200 rounded-2xl p-4">
+            <form id="sale-package-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-stone-50 border border-stone-200 rounded-2xl p-4" aria-describedby="sale-package-form-help">
                 <input type="hidden" id="sale-package-row-id">
+                <div class="md:col-span-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-white border border-stone-200 rounded-xl p-3">
+                    <p id="sale-package-form-help" class="text-xs text-stone-600"><strong>טופס חבילה:</strong> הזינו שם, מחיר ותיאור. במצב עריכה השמירה מעדכנת את החבילה הקיימת.</p>
+                    <span id="sale-package-form-mode" class="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">מצב: חבילה חדשה</span>
+                </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 mb-1">Code לזיהוי קשיח</label>
+                    <label for="sale-package-code" class="block text-xs font-bold text-stone-600 mb-1">Code לזיהוי קשיח</label>
                     <input id="sale-package-code" required class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm ltr:text-left" placeholder="newborn / outdoor / premium">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 mb-1">שם חבילה</label>
+                    <label for="sale-package-name" class="block text-xs font-bold text-stone-600 mb-1">שם חבילה</label>
                     <input id="sale-package-name" required class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="שם שיוצג באתר">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 mb-1">מחיר</label>
+                    <label for="sale-package-price" class="block text-xs font-bold text-stone-600 mb-1">מחיר</label>
                     <input id="sale-package-price" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="1,500 ₪">
                 </div>
                 <div class="flex items-end">
                     <button type="submit" class="w-full bg-emerald-700 text-white px-4 py-3 rounded-xl text-sm hover:bg-emerald-800 transition cursor-pointer"><i class="fa-solid fa-floppy-disk ml-1"></i> שמור חבילה</button>
                 </div>
                 <div class="md:col-span-4">
-                    <label class="block text-xs font-bold text-stone-600 mb-1">description — תיאור / סעיפים</label>
+                    <label for="sale-package-description" class="block text-xs font-bold text-stone-600 mb-1">description — תיאור / סעיפים</label>
                     <textarea id="sale-package-description" rows="3" class="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm" placeholder="אפשר להפריד סעיפים בשורות חדשות או בסימן •"></textarea>
                 </div>
             </form>
@@ -250,8 +272,35 @@
             return (value ?? '').toString().replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
         }
 
+        function getFieldValue(item, ...keys) {
+            if (!item) return '';
+            const lowerKeyMap = Object.keys(item).reduce((map, key) => {
+                map[key.toLowerCase()] = key;
+                return map;
+            }, {});
+            for (const key of keys) {
+                if (Object.prototype.hasOwnProperty.call(item, key) && item[key] != null) return item[key];
+                const actualKey = lowerKeyMap[key.toLowerCase()];
+                if (actualKey && item[actualKey] != null) return item[actualKey];
+            }
+            return '';
+        }
+
+        function getRowId(item) {
+            return getFieldValue(item, 'id', 'rowId', 'rowID', '_id');
+        }
+
+        function findPackageRowById(id) {
+            return adminPackageRows.find(item => getRowId(item).toString() === id.toString());
+        }
+
+        function setModeText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
         function getStatusValue(item) {
-            return (item.status || item.Status || '').toString().trim().toLowerCase();
+            return getFieldValue(item, 'status').toString().trim().toLowerCase();
         }
 
         function isInspirationStatus(item) {
@@ -260,24 +309,26 @@
         }
 
         function createImageItemHtml(img, finalUrl, finalLocation) {
+            const imageId = getRowId(img);
+            const description = getFieldValue(img, 'description', 'Description');
             return `
                 <div class="admin-editable relative rounded-xl overflow-hidden shadow-sm aspect-[4/3] bg-stone-200 group border border-stone-200">
-                    <img src="${escapeHtml(finalUrl)}" class="w-full h-full object-cover" alt="${escapeHtml(img.description || '')}">
-                    <div class="admin-overlay" onclick="triggerReplace(${img.id}, '${escapeJsString(finalLocation)}')">
+                    <img src="${escapeHtml(finalUrl)}" class="w-full h-full object-cover" alt="${escapeHtml(description || `תמונה במיקום ${finalLocation}`)}">
+                    <div class="admin-overlay" role="button" tabindex="0" aria-label="החלפת תמונה במיקום ${escapeHtml(finalLocation)}" onclick="triggerReplace('${escapeJsString(imageId)}', '${escapeJsString(finalLocation)}')" onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault(); triggerReplace('${escapeJsString(imageId)}', '${escapeJsString(finalLocation)}');}">
                         <span class="text-white bg-black/50 px-3 py-2 rounded-xl text-xs font-medium"><i class="fa-solid fa-camera ml-1"></i> החלף תמונה</span>
                     </div>
-                    <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded z-10 font-mono select-none">ID: ${img.id}</div>
+                    <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded z-10 font-mono select-none">ID: ${escapeHtml(imageId)}</div>
                 </div>
             `;
         }
 
         function getCollectionImageKeys(pkg) {
-            const code = (pkg.code || '').toString().trim();
+            const code = getFieldValue(pkg, 'code').toString().trim();
             return [code, `onestyle_${code}`].filter(Boolean).map(key => key.toLowerCase());
         }
 
         function renderAdminCollectionImageSections(rows = adminPackageRows) {
-            const inspirationRows = rows.filter(isInspirationStatus).filter(pkg => (pkg.code || '').toString().trim());
+            const inspirationRows = rows.filter(isInspirationStatus).filter(pkg => getFieldValue(pkg, 'code').toString().trim());
             if (!onestyleCollections) return;
             if (!inspirationRows.length) {
                 onestyleCollections.innerHTML = '<div class="md:col-span-2 text-center text-sm text-stone-500 bg-stone-50 border border-stone-200 rounded-2xl p-6">אין קולקציות השראה. הוסיפו שורה ב-packages עם status=השראה ו-code תואם לתמונות.</div>';
@@ -285,15 +336,17 @@
             }
 
             onestyleCollections.innerHTML = inspirationRows.map(pkg => {
-                const code = (pkg.code || '').toString().trim();
-                const images = [...new Map(getCollectionImageKeys(pkg).flatMap(key => adminImagesByLocation[key] || []).map(record => [record.img.id || record.url, record])).values()];
+                const rowId = getRowId(pkg);
+                const code = getFieldValue(pkg, 'code').toString().trim();
+                const name = getFieldValue(pkg, 'name', 'title');
+                const images = [...new Map(getCollectionImageKeys(pkg).flatMap(key => adminImagesByLocation[key] || []).map(record => [getRowId(record.img) || record.url, record])).values()];
                 return `
                     <div>
                         <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-md font-semibold text-stone-700">${escapeHtml(pkg.name || pkg.title || code)} <span class="font-mono text-[11px] text-stone-400">(${escapeHtml(code)})</span></h3>
+                            <h3 class="text-md font-semibold text-stone-700">${escapeHtml(name || code)} <span class="font-mono text-[11px] text-stone-400">(${escapeHtml(code)})</span></h3>
                             <div class="flex gap-2">
-                                <button onclick="editInspiration(${pkg.id})" class="text-xs bg-white border border-purple-200 text-purple-800 px-3 py-1 rounded-lg hover:bg-purple-100 transition cursor-pointer">ערוך קולקציה</button>
-                                <button onclick="triggerAddNew('${escapeJsString(code)}')" class="text-xs bg-stone-100 text-stone-800 px-3 py-1 rounded-lg hover:bg-stone-200 transition cursor-pointer"><i class="fa-solid fa-plus ml-1"></i> הוסף תמונה</button>
+                                <button type="button" onclick="editInspiration('${escapeJsString(rowId)}')" class="text-xs bg-white border border-purple-200 text-purple-800 px-3 py-1 rounded-lg hover:bg-purple-100 transition cursor-pointer" aria-label="עריכת קולקציית ${escapeHtml(name || code)}">ערוך קולקציה</button>
+                                <button type="button" onclick="triggerAddNew('${escapeJsString(code)}')" class="text-xs bg-stone-100 text-stone-800 px-3 py-1 rounded-lg hover:bg-stone-200 transition cursor-pointer" aria-label="הוספת תמונה לקולקציית ${escapeHtml(name || code)}"><i class="fa-solid fa-plus ml-1"></i> הוסף תמונה</button>
                             </div>
                         </div>
                         <div class="grid grid-cols-3 gap-3">
@@ -317,8 +370,8 @@
                 adminImagesByLocation = {};
 
                 rows.forEach(img => {
-                    const finalUrl = img.url || img.Url || "";
-                    const finalLocation = (img.location || img.Location || "").toString().trim();
+                    const finalUrl = getFieldValue(img, 'url') || "";
+                    const finalLocation = getFieldValue(img, 'location').toString().trim();
                     const normalizedLocation = finalLocation.toLowerCase();
                     if (!finalUrl || !normalizedLocation) return;
 
@@ -550,38 +603,56 @@
             setInputValue('inspiration-row-id', '');
             inspirationForm.reset();
             setInspirationColor('#FED7AA');
+            setModeText('inspiration-form-mode', 'מצב: קולקציה חדשה');
             document.getElementById('inspiration-code').focus();
         }
 
         function resetSalePackageForm() {
             setInputValue('sale-package-row-id', '');
             salePackageForm.reset();
+            setModeText('sale-package-form-mode', 'מצב: חבילה חדשה');
             document.getElementById('sale-package-code').focus();
         }
 
         function editInspiration(id) {
-            const pkg = adminPackageRows.find(item => item.id === id);
-            if (!pkg) return;
-            setInputValue('inspiration-row-id', pkg.id);
-            setInputValue('inspiration-code', pkg.code);
-            setInputValue('inspiration-name', pkg.name);
-            setInputValue('inspiration-title', pkg.title);
-            setInputValue('inspiration-textcontent', pkg.textcontent || pkg.textContent);
-            setInspirationColor(pkg.color || '#FED7AA');
-            setInputValue('inspiration-clothing', pkg.clothing);
-            setInputValue('inspiration-hashtags', pkg.hashtags);
-            setInputValue('inspiration-circletext', pkg.circletext || pkg.circleText);
+            const pkg = findPackageRowById(id);
+            if (!pkg) {
+                showStatus('לא נמצאה קולקציה לעריכה. רעננו את הדף ונסו שוב.', true);
+                return;
+            }
+            const rowId = getRowId(pkg);
+            const name = getFieldValue(pkg, 'name');
+            setInputValue('inspiration-row-id', rowId);
+            setInputValue('inspiration-code', getFieldValue(pkg, 'code'));
+            setInputValue('inspiration-name', name);
+            setInputValue('inspiration-title', getFieldValue(pkg, 'title'));
+            setInputValue('inspiration-textcontent', getFieldValue(pkg, 'textcontent', 'textContent'));
+            setInspirationColor(getFieldValue(pkg, 'color') || '#FED7AA');
+            setInputValue('inspiration-clothing', getFieldValue(pkg, 'clothing'));
+            setInputValue('inspiration-hashtags', getFieldValue(pkg, 'hashtags'));
+            setInputValue('inspiration-circletext', getFieldValue(pkg, 'circletext', 'circleText'));
+            setModeText('inspiration-form-mode', `מצב: עריכת קולקציה קיימת #${rowId}`);
+            showStatus(`קולקציית ״${name || rowId}״ נטענה לעריכה. לחצו שמור לעדכון השורה.`, false);
+            inspirationForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
             document.getElementById('inspiration-code').focus();
         }
 
         function editSalePackage(id) {
-            const pkg = adminPackageRows.find(item => item.id === id);
-            if (!pkg) return;
-            setInputValue('sale-package-row-id', pkg.id);
-            setInputValue('sale-package-code', pkg.code);
-            setInputValue('sale-package-name', pkg.name);
-            setInputValue('sale-package-price', pkg.price);
-            setInputValue('sale-package-description', pkg.description);
+            const pkg = findPackageRowById(id);
+            if (!pkg) {
+                showStatus('לא נמצאה חבילה לעריכה. רעננו את הדף ונסו שוב.', true);
+                return;
+            }
+            const rowId = getRowId(pkg);
+            const name = getFieldValue(pkg, 'name');
+            setInputValue('sale-package-row-id', rowId);
+            setInputValue('sale-package-code', getFieldValue(pkg, 'code'));
+            setInputValue('sale-package-name', name);
+            setInputValue('sale-package-price', getFieldValue(pkg, 'price'));
+            setInputValue('sale-package-description', getFieldValue(pkg, 'description'));
+            setModeText('sale-package-form-mode', `מצב: עריכת חבילה קיימת #${rowId}`);
+            showStatus(`חבילת ״${name || rowId}״ נטענה לעריכה. לחצו שמור לעדכון השורה.`, false);
+            salePackageForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
             document.getElementById('sale-package-code').focus();
         }
 
@@ -592,19 +663,26 @@
                 const data = await response.json();
                 adminPackageRows = data.packages || data.Packages || [];
                 const saleRows = adminPackageRows.filter(pkg => !isInspirationStatus(pkg));
-                packagesList.innerHTML = saleRows.map(pkg => `
-                    <div class="border border-stone-200 rounded-2xl p-4 bg-stone-50">
+                packagesList.innerHTML = saleRows.map(pkg => {
+                    const rowId = getRowId(pkg);
+                    const code = getFieldValue(pkg, 'code');
+                    const name = getFieldValue(pkg, 'name');
+                    const price = getFieldValue(pkg, 'price');
+                    const description = getFieldValue(pkg, 'description');
+                    return `
+                    <article class="border border-stone-200 rounded-2xl p-4 bg-stone-50" aria-label="חבילת ${escapeHtml(name || code)}">
                         <div class="flex justify-between items-start gap-3 mb-2">
                             <div>
-                                <div class="font-mono text-[11px] text-stone-500">code: ${escapeHtml(pkg.code || '')}</div>
-                                <h3 class="font-bold text-stone-800">${escapeHtml(pkg.name || '')}</h3>
-                                ${pkg.price ? `<div class="text-emerald-700 font-bold">${escapeHtml(pkg.price)}</div>` : ''}
+                                <div class="font-mono text-[11px] text-stone-500">code: ${escapeHtml(code || '')} · ID: ${escapeHtml(rowId || '')}</div>
+                                <h3 class="font-bold text-stone-800">${escapeHtml(name || '')}</h3>
+                                ${price ? `<div class="text-emerald-700 font-bold">${escapeHtml(price)}</div>` : ''}
                             </div>
-                            <button onclick="editSalePackage(${pkg.id})" class="text-xs bg-white border border-stone-200 px-3 py-1 rounded-lg hover:bg-stone-100">ערוך</button>
+                            <button type="button" onclick="editSalePackage('${escapeJsString(rowId)}')" class="text-xs bg-white border border-stone-200 px-3 py-1 rounded-lg hover:bg-stone-100" aria-label="עריכת חבילת ${escapeHtml(name || code)}">ערוך חבילה</button>
                         </div>
-                        <p class="text-xs text-stone-600 whitespace-pre-line">${escapeHtml(pkg.description || '')}</p>
-                    </div>
-                `).join('') || '<div class="md:col-span-3 text-center text-stone-500 bg-stone-50 border border-stone-200 rounded-2xl p-6">אין עדיין חבילות מכירה בגיליון.</div>';
+                        <p class="text-xs text-stone-600 whitespace-pre-line">${escapeHtml(description || '')}</p>
+                    </article>
+                `;
+                }).join('') || '<div class="md:col-span-3 text-center text-stone-500 bg-stone-50 border border-stone-200 rounded-2xl p-6">אין עדיין חבילות מכירה בגיליון.</div>';
                 renderAdminCollectionImageSections(adminPackageRows);
                 showStatus("הנתונים נטענו בהצלחה!", false);
             } catch (error) {
@@ -616,15 +694,24 @@
         async function savePackageRow(rowId, payload, successMessage, resetCallback) {
             const method = rowId ? 'PUT' : 'POST';
             const url = rowId ? `${SHEETY_PACKAGES_API_URL}/${rowId}` : SHEETY_PACKAGES_API_URL;
+            const bodyOptions = [
+                { package: payload },
+                { Package: payload },
+                { packages: payload }
+            ];
             showStatus(rowId ? "מעדכן נתונים בגוגל שיטס..." : "מוסיף שורה חדשה לגוגל שיטס...");
             try {
-                const response = await fetch(url, {
-                    method,
-                    headers: getAdminHeaders(),
-                    body: JSON.stringify({ package: payload })
-                });
-                ensureAuthorizedResponse(response);
-                if (!response.ok) throw new Error(`Sheety package ${method} failed`);
+                let response = null;
+                for (const bodyOption of bodyOptions) {
+                    response = await fetch(url, {
+                        method,
+                        headers: getAdminHeaders(),
+                        body: JSON.stringify(bodyOption)
+                    });
+                    ensureAuthorizedResponse(response);
+                    if (response.ok) break;
+                }
+                if (!response?.ok) throw new Error(`Sheety package ${method} failed`);
                 resetCallback();
                 await fetchAndRenderPackages();
                 showStatus(successMessage, false);
