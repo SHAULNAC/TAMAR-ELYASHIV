@@ -676,6 +676,18 @@
         .recommendations-modal.is-open .recommendations-modal__panel {
             transform: translateY(0) scale(1);
         }
+        /* פתרון בטוח ב-CSS שאינו משנה את נראות האנימציה */
+.aperture-animated-svg,
+.aperture-animated-svg * {
+    /* 1. אומר לדפדפן שהאלמנט הזה הולך להשתנות, כדי שיכין לו משאבים מראש */
+    will-change: transform;
+    
+    /* 2. הטריק החשוב ביותר: מעביר את רינדור האלמנט לכרטיס המסך (GPU) */
+    transform: translateZ(0);
+    
+    /* 3. מונע "קפיצות" או טשטוש זמני של ה-SVG בזמן שהמחשב החזק מריץ אותו מהר */
+    backface-visibility: hidden;
+}
     </style>
 </head>
 <body class="overflow-x-hidden antialiased is-loading">
