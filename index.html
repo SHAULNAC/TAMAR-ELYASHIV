@@ -369,7 +369,7 @@
             z-index: 100;
             display: grid;
             place-items: center;
-            padding: clamp(1rem, 2.5vw, 2rem);
+            padding: clamp(.35rem, 1vw, .8rem);
             background:
                 radial-gradient(circle at 18% 12%, rgba(225,178,182,.22), transparent 32%),
                 radial-gradient(circle at 82% 85%, rgba(216,193,179,.22), transparent 30%),
@@ -385,11 +385,11 @@
         }
         .image-lightbox__panel {
             width: min(1180px, 100%);
-            max-height: min(94vh, 920px);
+            height: min(96vh, 940px);
             display: grid;
-            grid-template-rows: auto minmax(0, 1fr) auto auto;
-            gap: .9rem;
-            padding: clamp(.85rem, 2vw, 1.2rem);
+            grid-template-rows: auto minmax(0, 1fr);
+            gap: .3rem;
+            padding: clamp(.28rem, .75vw, .5rem);
             border: 1px solid rgba(245,235,230,.26);
             border-radius: 2rem;
             background: linear-gradient(145deg, rgba(253,251,249,.96), rgba(244,239,234,.9));
@@ -408,6 +408,8 @@
             color: #725141;
             font-size: .78rem;
             letter-spacing: .12em;
+            min-height: 2.2rem;
+            padding-inline: clamp(.25rem, .75vw, .45rem);
         }
         .image-lightbox__close,
         .image-lightbox__nav {
@@ -415,10 +417,11 @@
             background: rgba(255,255,255,.78);
             color: #583D31;
             box-shadow: 0 10px 24px rgba(61,42,33,.08);
-            transition: transform .25s ease, background .25s ease, color .25s ease, border-color .25s ease;
+            transition: transform .25s ease, background .25s ease, color .25s ease, border-color .25s ease, filter .25s ease;
         }
         .image-lightbox__close:hover,
-        .image-lightbox__nav:hover {
+        .image-lightbox__nav:hover,
+        .image-lightbox__nav:focus-visible {
             transform: translateY(-2px);
             background: #3D2A21;
             color: #FBF9F6;
@@ -437,13 +440,13 @@
             background:
                 linear-gradient(135deg, rgba(61,42,33,.08), rgba(216,193,179,.14)),
                 #F4EFEA;
+            isolation: isolate;
         }
         .image-lightbox__image {
             width: 100%;
-            height: min(62vh, 620px);
-            object-fit: contain;
+            height: 100%;
+            object-fit: cover;
             display: block;
-            padding: clamp(.5rem, 1vw, .9rem);
             opacity: 1;
             transform: scale(1);
             transition: opacity .34s ease, transform .44s cubic-bezier(0.16, 1, 0.3, 1);
@@ -452,98 +455,128 @@
             opacity: 0;
             transform: scale(.985) translateY(8px);
         }
-        .image-lightbox__caption {
-            color: #725141;
-            font-size: .82rem;
-            text-align: center;
-            min-height: 1.4rem;
-            letter-spacing: .04em;
-        }
         .image-lightbox__controls {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
             display: flex;
-            justify-content: center;
             align-items: center;
-            gap: .8rem;
+            justify-content: space-between;
+            padding: clamp(.75rem, 2vw, 1.35rem);
+            pointer-events: none;
         }
         .image-lightbox__nav {
-            min-width: 3rem;
-            height: 3rem;
-            border-radius: 9999px;
+            pointer-events: auto;
+            min-width: 2.6rem;
+            height: 2.6rem;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: rgba(251,249,246,.94);
+            box-shadow: none;
+            text-shadow: 0 4px 18px rgba(0,0,0,.42);
+            font-size: clamp(1.55rem, 3vw, 2.05rem);
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1), color .24s ease, filter .24s ease, text-shadow .24s ease;
+        }
+        .image-lightbox__nav:hover,
+        .image-lightbox__nav:focus-visible {
+            background: transparent;
+            color: #FBF9F6;
+            transform: translateY(-2px) scale(1.12);
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,.32));
+            text-shadow: 0 6px 22px rgba(225,178,182,.55);
+        }
+        .image-lightbox__nav:active {
+            transform: translateY(1px) scale(.92);
+            color: #E1B2B6;
+            filter: drop-shadow(0 3px 10px rgba(0,0,0,.28));
+        }
+        .image-lightbox__rail {
+            position: absolute;
+            left: 50%;
+            right: auto;
+            bottom: clamp(.55rem, 1.4vw, .95rem);
+            width: min(520px, calc(100% - 1.5rem));
+            z-index: 3;
+            display: grid;
+            justify-items: center;
+            gap: .42rem;
+            padding: .45rem clamp(.5rem, 1.4vw, .7rem);
+            border: 1px solid rgba(245,235,230,.22);
+            border-radius: 1.05rem;
+            background: linear-gradient(180deg, rgba(61,42,33,.08), rgba(61,42,33,.58));
+            backdrop-filter: blur(12px);
+            opacity: 0;
+            transform: translateX(-50%) translateY(18px) scale(.98);
+            pointer-events: auto;
+            transition: opacity .34s ease .55s, transform .44s cubic-bezier(0.16, 1, 0.3, 1) .55s;
+        }
+        .image-lightbox__rail:hover,
+        .image-lightbox__rail:focus-within,
+        .image-lightbox__stage.is-rail-visible .image-lightbox__rail {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0) scale(1);
+            pointer-events: auto;
+            transition-delay: 0s;
         }
         .image-lightbox__dots {
             display: flex;
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
-            gap: .45rem;
+            gap: .34rem;
             max-width: min(52vw, 520px);
         }
         .image-lightbox__dot {
-            width: .55rem;
-            height: .55rem;
+            width: .42rem;
+            height: .42rem;
             border-radius: 9999px;
-            background: #D9C1B3;
+            background: rgba(245,235,230,.76);
             border: 0;
             transition: width .3s ease, background .3s ease, transform .3s ease;
         }
         .image-lightbox__dot.is-active {
-            width: 1.8rem;
-            background: linear-gradient(90deg, #E1B2B6, #8E6955);
+            width: 1.25rem;
+            background: linear-gradient(90deg, #E1B2B6, #FBF9F6);
             transform: translateY(-1px);
         }
         .image-lightbox__thumbs {
             display: flex;
             justify-content: center;
-            gap: .65rem;
+            gap: .42rem;
             width: fit-content;
             max-width: 100%;
             margin-inline: auto;
             overflow-x: auto;
             overscroll-behavior-inline: contain;
-            padding: .25rem .15rem .55rem;
-            scrollbar-color: #C2A391 rgba(245,235,230,.75);
-            opacity: 0;
-            transform: translateY(14px) scale(.98);
+            padding: .05rem .08rem .12rem;
+            scrollbar-width: none;
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
         }
-        .image-lightbox.is-open .image-lightbox__thumbs {
-            animation: lightboxThumbRailIn .48s .16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes lightboxThumbRailIn {
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+        .image-lightbox__thumbs::-webkit-scrollbar {
+            display: none;
         }
         .image-lightbox__thumb {
-            flex: 0 0 76px;
-            height: 58px;
-            border-radius: 1rem;
-            border: 2px solid transparent;
+            flex: 0 0 54px;
+            height: 40px;
+            border-radius: .72rem;
+            border: 2px solid rgba(255,255,255,.18);
             padding: 0;
             overflow: hidden;
             background: #F4EFEA;
-            opacity: .72;
+            opacity: .78;
             transition: opacity .25s ease, transform .25s ease, border-color .25s ease, box-shadow .25s ease;
-        }
-        .image-lightbox.is-open .image-lightbox__thumb {
-            animation: lightboxThumbIn .4s cubic-bezier(0.16, 1, 0.3, 1) both;
-            animation-delay: calc(.2s + (var(--thumb-index, 0) * 40ms));
-        }
-        @keyframes lightboxThumbIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px) scale(.94);
-            }
         }
         .image-lightbox__thumb:hover,
         .image-lightbox__thumb.is-active {
             opacity: 1;
             transform: translateY(-2px);
             border-color: #E1B2B6;
-            box-shadow: 0 10px 22px rgba(61,42,33,.12);
+            box-shadow: 0 10px 22px rgba(0,0,0,.2);
         }
         .image-lightbox__thumb img {
             width: 100%;
@@ -560,10 +593,10 @@
         }
         @media (max-width: 640px) {
             .image-lightbox { padding: .6rem; }
-            .image-lightbox__panel { border-radius: 1.4rem; }
-            .image-lightbox__image { height: 54vh; }
+            .image-lightbox__panel { border-radius: 1.25rem; }
             .image-lightbox__dots { max-width: 44vw; }
-            .image-lightbox__thumb { flex-basis: 64px; height: 50px; }
+            .image-lightbox__rail { width: min(82vw, 420px); }
+            .image-lightbox__thumb { flex-basis: 46px; height: 34px; }
         }
 
         @media (max-width: 768px) {
@@ -1074,18 +1107,19 @@
             </div>
             <div class="image-lightbox__stage">
                 <img id="lightbox-image" class="image-lightbox__image" src="" alt="תמונה מוגדלת מהגלריה">
+                <div class="image-lightbox__controls" aria-label="ניווט בין תמונות">
+                    <button type="button" id="lightbox-next" class="image-lightbox__nav" aria-label="לתמונה הבאה">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button type="button" id="lightbox-prev" class="image-lightbox__nav" aria-label="לתמונה הקודמת">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                </div>
+                <div class="image-lightbox__rail" aria-label="קרוסלה ותמונות ממוזערות">
+                    <div id="lightbox-dots" class="image-lightbox__dots" aria-label="נקודות קרוסלה"></div>
+                    <div id="lightbox-thumbs" class="image-lightbox__thumbs" aria-label="תמונות ממוזערות"></div>
+                </div>
             </div>
-            <div id="lightbox-caption" class="image-lightbox__caption">תמונה מתוך הגלריה</div>
-            <div class="image-lightbox__controls" aria-label="ניווט בין תמונות">
-                <button type="button" id="lightbox-next" class="image-lightbox__nav" aria-label="לתמונה הבאה">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-                <div id="lightbox-dots" class="image-lightbox__dots" aria-label="נקודות קרוסלה"></div>
-                <button type="button" id="lightbox-prev" class="image-lightbox__nav" aria-label="לתמונה הקודמת">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
-            </div>
-            <div id="lightbox-thumbs" class="image-lightbox__thumbs" aria-label="תמונות ממוזערות"></div>
         </div>
     </div>
 
@@ -1186,7 +1220,6 @@
                 modal: document.getElementById('image-lightbox'),
                 image: document.getElementById('lightbox-image'),
                 counter: document.getElementById('lightbox-counter'),
-                caption: document.getElementById('lightbox-caption'),
                 dots: document.getElementById('lightbox-dots'),
                 thumbs: document.getElementById('lightbox-thumbs'),
                 close: document.getElementById('lightbox-close')
@@ -1220,10 +1253,9 @@
         }
 
         function syncLightboxActiveControls() {
-            const { counter, caption, dots, thumbs } = getLightboxElements();
+            const { counter, dots, thumbs } = getLightboxElements();
             const positionText = `תמונה ${lightboxState.index + 1} מתוך ${lightboxState.images.length}`;
-            if (counter) counter.textContent = `${positionText} · ${lightboxState.context}`;
-            if (caption) caption.textContent = `${positionText} — ${lightboxState.labels[lightboxState.index] || lightboxState.context}`;
+            if (counter) counter.textContent = `${positionText} · ${lightboxState.labels[lightboxState.index] || lightboxState.context}`;
             dots?.querySelectorAll('.image-lightbox__dot').forEach((dot, index) => dot.classList.toggle('is-active', index === lightboxState.index));
             thumbs?.querySelectorAll('.image-lightbox__thumb').forEach((thumb, index) => {
                 thumb.classList.toggle('is-active', index === lightboxState.index);
@@ -1249,6 +1281,22 @@
             setLightboxImage(lightboxState.index + step);
         }
 
+        let lightboxRailHideTimer;
+
+        function showLightboxRail(stage) {
+            if (!stage) return;
+            window.clearTimeout(lightboxRailHideTimer);
+            stage.classList.add('is-rail-visible');
+        }
+
+        function scheduleLightboxRailHide(stage) {
+            if (!stage) return;
+            window.clearTimeout(lightboxRailHideTimer);
+            lightboxRailHideTimer = window.setTimeout(() => {
+                stage.classList.remove('is-rail-visible');
+            }, 720);
+        }
+
         function openLightboxForSources(images, startIndex = 0, context = 'הגלריה') {
             const { modal, image, close } = getLightboxElements();
             const items = normalizeLightboxItems(images);
@@ -1261,6 +1309,7 @@
             image.alt = lightboxState.labels[lightboxState.index] || `תמונה מוגדלת ${lightboxState.index + 1}`;
             renderLightboxNavigation();
             syncLightboxActiveControls();
+            modal.querySelector('.image-lightbox__stage')?.classList.remove('is-rail-visible');
             modal.classList.add('is-open');
             modal.setAttribute('aria-hidden', 'false');
             document.body.classList.add('lightbox-locked');
@@ -1270,6 +1319,8 @@
         function closeLightbox() {
             const { modal } = getLightboxElements();
             if (!modal?.classList.contains('is-open')) return;
+            window.clearTimeout(lightboxRailHideTimer);
+            modal.querySelector('.image-lightbox__stage')?.classList.remove('is-rail-visible');
             modal.classList.remove('is-open');
             modal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('lightbox-locked');
@@ -1289,6 +1340,17 @@
             document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
             document.getElementById('lightbox-prev')?.addEventListener('click', () => moveLightbox(-1));
             document.getElementById('lightbox-next')?.addEventListener('click', () => moveLightbox(1));
+            const lightboxStage = document.querySelector('#image-lightbox .image-lightbox__stage');
+            document.querySelectorAll('#image-lightbox .image-lightbox__nav').forEach((navButton) => {
+                navButton.addEventListener('mouseenter', () => showLightboxRail(lightboxStage));
+                navButton.addEventListener('focus', () => showLightboxRail(lightboxStage));
+                navButton.addEventListener('mouseleave', () => scheduleLightboxRailHide(lightboxStage));
+                navButton.addEventListener('blur', () => scheduleLightboxRailHide(lightboxStage));
+            });
+            document.querySelector('#image-lightbox .image-lightbox__rail')?.addEventListener('mouseenter', () => showLightboxRail(lightboxStage));
+            document.querySelector('#image-lightbox .image-lightbox__rail')?.addEventListener('mouseleave', () => scheduleLightboxRailHide(lightboxStage));
+            document.querySelector('#image-lightbox .image-lightbox__rail')?.addEventListener('focusin', () => showLightboxRail(lightboxStage));
+            document.querySelector('#image-lightbox .image-lightbox__rail')?.addEventListener('focusout', () => scheduleLightboxRailHide(lightboxStage));
             document.getElementById('image-lightbox')?.addEventListener('click', (event) => {
                 if (event.target.id === 'image-lightbox') closeLightbox();
             });
