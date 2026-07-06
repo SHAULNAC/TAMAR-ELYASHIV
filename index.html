@@ -309,14 +309,16 @@
 
 
         .gallery-container {
-          width: min(100vw, 100%);
+          width: 100vw;
           margin-inline: calc(50% - 50vw);
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 2px;
         }
         .gallery-container .box {
           width: 100%;
-          min-height: clamp(320px, 35vw, 520px);
+          aspect-ratio: 3 / 4;
+          min-height: 0;
           background: #583D31;
         }
         .gallery-container .box .content {
@@ -331,13 +333,9 @@
           object-fit: cover;
           transition: transform 600ms cubic-bezier(.76,.16,.33,.99);
         }
-        .gallery-container .box:hover .content img { transform: scale(1.035); }
-        .gallery-container .box:nth-child(1) { grid-column: span 2; grid-row: span 1; }
-        .gallery-container .box:nth-child(2) { grid-row: span 1; }
-        @media screen and (min-width:1210px){
-          .gallery-container .box:nth-child(4), .gallery-container .box:nth-child(5) { grid-column: span 2; grid-row: span 1; }
-          .gallery-container .box:nth-child(1){ grid-column: span 1; }
-          .gallery-container .box:nth-child(3){ grid-column: span 2; }
+        .gallery-container .box:hover .content img { transform: scale(1.025); }
+        @media (max-width: 640px) {
+          .gallery-container { gap: 1px; }
         }
 
 
@@ -1165,17 +1163,31 @@
             setLightboxImage(lightboxState.index + step);
         }
 
-        function downloadLightboxImage() {
+        async function downloadLightboxImage() {
             const src = lightboxState.images[lightboxState.index];
             if (!src) return;
-            const link = document.createElement('a');
-            link.href = src;
-            link.download = `${(lightboxState.labels[lightboxState.index] || 'tamar-elyashiv-image').replace(/\s+/g, '-')}.jpg`;
-            link.target = '_blank';
-            link.rel = 'noopener';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
+            const filename = `${(lightboxState.labels[lightboxState.index] || 'tamar-elyashiv-image').replace(/\s+/g, '-')}.jpg`;
+            try {
+                const response = await fetch(src, { mode: 'cors' });
+                if (!response.ok) throw new Error('Image download failed');
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(blobUrl);
+            } catch (error) {
+                console.error('Failed to download image as a file:', error);
+                const link = document.createElement('a');
+                link.href = src;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
         }
 
         async function shareLightboxImage() {
