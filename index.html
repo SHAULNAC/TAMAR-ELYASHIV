@@ -309,247 +309,176 @@
 
 
         .gallery-container {
-          width: 100%;
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          width: 100vw;
+          margin-inline: calc(50% - 50vw);
+          column-count: 3;
+          column-gap: 2px;
+          line-height: 0;
         }
         .gallery-container .box {
           width: 100%;
-          min-height: 260px;
+          display: inline-block;
+          break-inside: avoid;
+          page-break-inside: avoid;
+          margin: 0 0 2px;
           background: #583D31;
+          vertical-align: top;
         }
         .gallery-container .box .content {
           position: relative;
           width: 100%;
-          height: 100%;
+          height: auto;
           overflow: hidden;
+          line-height: 0;
         }
         .gallery-container .box .content img {
           width: 100%;
-          height: 100%;
-          object-fit: cover;
-          filter: grayscale(45%) sepia(18%) saturate(108%) brightness(0.97) contrast(0.98);
-          transition: filter 500ms cubic-bezier(.76,.16,.33,.99);
-        }
-        .gallery-container .box:hover .content img { filter: grayscale(0%) sepia(0%) hue-rotate(0deg) saturate(100%) brightness(1); }
-        .gallery-container .box .content::after {
-          content: "";
-          background: transparent;
-          width: 100%;
-          height: 100%;
-          border: 2px solid #fff;
+          height: auto;
+          object-fit: contain;
           display: block;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) rotate(360deg);
-          opacity: 0;
-          transition: opacity 500ms cubic-bezier(.76,.16,.33,.99), width 500ms cubic-bezier(.76,.16,.33,.99), height 500ms cubic-bezier(.76,.16,.33,.99), transform 500ms cubic-bezier(.76,.16,.33,.99);
+          transition: transform 600ms cubic-bezier(.76,.16,.33,.99);
         }
-        .gallery-container .box:hover .content::after {
-          opacity: 1;
-          width: 50%;
-          height: 50%;
-          transform: translate(-50%, -50%) rotate(180deg);
-        }
-        .gallery-container .box:nth-child(1) { grid-column: span 2; grid-row: span 1; }
-        .gallery-container .box:nth-child(2) { grid-row: span 1; }
-        @media screen and (min-width:1210px){
-          .gallery-container .box:nth-child(4), .gallery-container .box:nth-child(5) { grid-column: span 2; grid-row: span 1; }
-          .gallery-container .box:nth-child(1){ grid-column: span 1; }
-          .gallery-container .box:nth-child(3){ grid-column: span 2; }
+        .gallery-container .box:hover .content img { transform: scale(1.025); }
+        @media (max-width: 640px) {
+          .gallery-container { column-gap: 1px; }
+          .gallery-container .box { margin-bottom: 1px; }
         }
 
 
 
-        /* מודל צפייה גדול בתמונות - תואם לשפה היוקרתית של האתר */
+        /* תצוגת תמונה מלאה - כהה, נקייה ומקסימלית */
         .image-lightbox {
             position: fixed;
             inset: 0;
             z-index: 100;
             display: grid;
             place-items: center;
-            padding: clamp(1rem, 2.5vw, 2rem);
-            background:
-                radial-gradient(circle at 18% 12%, rgba(225,178,182,.22), transparent 32%),
-                radial-gradient(circle at 82% 85%, rgba(216,193,179,.22), transparent 30%),
-                rgba(61,42,33,.88);
-            backdrop-filter: blur(18px);
+            padding: 0;
+            background: rgba(3, 3, 3, .94);
+            backdrop-filter: blur(10px);
             opacity: 0;
             pointer-events: none;
-            transition: opacity .45s ease;
+            transition: opacity .36s ease;
         }
         .image-lightbox.is-open {
             opacity: 1;
             pointer-events: auto;
         }
         .image-lightbox__panel {
-            width: min(1180px, 100%);
-            max-height: min(94vh, 920px);
-            display: grid;
-            grid-template-rows: auto minmax(0, 1fr) auto auto;
-            gap: .9rem;
-            padding: clamp(.85rem, 2vw, 1.2rem);
-            border: 1px solid rgba(245,235,230,.26);
-            border-radius: 2rem;
-            background: linear-gradient(145deg, rgba(253,251,249,.96), rgba(244,239,234,.9));
-            box-shadow: 0 30px 90px rgba(0,0,0,.34), 0 0 0 1px rgba(225,178,182,.18) inset;
-            transform: translateY(24px) scale(.96);
-            transition: transform .55s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: transparent;
+            transform: scale(.985);
+            transition: transform .42s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .image-lightbox.is-open .image-lightbox__panel {
-            transform: translateY(0) scale(1);
+            transform: scale(1);
         }
         .image-lightbox__topbar {
+            position: absolute;
+            top: clamp(.7rem, 2vw, 1.4rem);
+            right: clamp(.7rem, 2vw, 1.4rem);
+            z-index: 4;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 1rem;
-            color: #725141;
-            font-size: .78rem;
-            letter-spacing: .12em;
+            gap: clamp(.8rem, 1.6vw, 1.1rem);
+            direction: rtl;
         }
         .image-lightbox__close,
+        .image-lightbox__action,
         .image-lightbox__nav {
-            border: 1px solid rgba(142,105,85,.18);
-            background: rgba(255,255,255,.78);
-            color: #583D31;
-            box-shadow: 0 10px 24px rgba(61,42,33,.08);
-            transition: transform .25s ease, background .25s ease, color .25s ease, border-color .25s ease;
+            border: 0;
+            background: transparent;
+            color: rgba(251,249,246,.92);
+            box-shadow: none;
+            text-shadow: 0 6px 22px rgba(0,0,0,.65);
+            transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1), color .24s ease, filter .24s ease, opacity .24s ease;
+        }
+        .image-lightbox__close,
+        .image-lightbox__action {
+            width: auto;
+            height: auto;
+            padding: .2rem;
+            border-radius: 0;
+            font-size: clamp(1.05rem, 2vw, 1.35rem);
         }
         .image-lightbox__close:hover,
-        .image-lightbox__nav:hover {
-            transform: translateY(-2px);
-            background: #3D2A21;
+        .image-lightbox__close:focus-visible,
+        .image-lightbox__action:hover,
+        .image-lightbox__action:focus-visible,
+        .image-lightbox__nav:hover,
+        .image-lightbox__nav:focus-visible {
             color: #FBF9F6;
-            border-color: rgba(225,178,182,.55);
+            transform: translateY(-2px) scale(1.14);
+            filter: drop-shadow(0 8px 16px rgba(225,178,182,.28));
         }
-        .image-lightbox__close {
-            width: 2.65rem;
-            height: 2.65rem;
-            border-radius: 9999px;
+        .image-lightbox__close:active,
+        .image-lightbox__action:active,
+        .image-lightbox__nav:active {
+            color: #E1B2B6;
+            transform: translateY(1px) scale(.9);
         }
         .image-lightbox__stage {
-            position: relative;
-            min-height: 0;
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
             overflow: hidden;
-            border-radius: 1.45rem;
-            background:
-                linear-gradient(135deg, rgba(61,42,33,.08), rgba(216,193,179,.14)),
-                #F4EFEA;
+            background: transparent;
         }
         .image-lightbox__image {
-            width: 100%;
-            height: min(62vh, 620px);
+            max-width: 100vw;
+            max-height: 100vh;
+            width: auto;
+            height: auto;
             object-fit: contain;
             display: block;
-            padding: clamp(.5rem, 1vw, .9rem);
             opacity: 1;
             transform: scale(1);
-            transition: opacity .34s ease, transform .44s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity .28s ease, transform .38s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .image-lightbox__image.is-switching {
             opacity: 0;
-            transform: scale(.985) translateY(8px);
-        }
-        .image-lightbox__caption {
-            color: #725141;
-            font-size: .82rem;
-            text-align: center;
-            min-height: 1.4rem;
-            letter-spacing: .04em;
+            transform: scale(.992);
         }
         .image-lightbox__controls {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+        }
+        .image-lightbox__nav-zone {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: min(22vw, 260px);
             display: flex;
-            justify-content: center;
             align-items: center;
-            gap: .8rem;
+            pointer-events: auto;
+        }
+        .image-lightbox__nav-zone--next {
+            right: 0;
+            justify-content: flex-end;
+            padding-right: clamp(1rem, 3vw, 2.2rem);
+        }
+        .image-lightbox__nav-zone--prev {
+            left: 0;
+            justify-content: flex-start;
+            padding-left: clamp(1rem, 3vw, 2.2rem);
         }
         .image-lightbox__nav {
-            min-width: 3rem;
-            height: 3rem;
-            border-radius: 9999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .image-lightbox__dots {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: .45rem;
-            max-width: min(52vw, 520px);
-        }
-        .image-lightbox__dot {
-            width: .55rem;
-            height: .55rem;
-            border-radius: 9999px;
-            background: #D9C1B3;
-            border: 0;
-            transition: width .3s ease, background .3s ease, transform .3s ease;
-        }
-        .image-lightbox__dot.is-active {
-            width: 1.8rem;
-            background: linear-gradient(90deg, #E1B2B6, #8E6955);
-            transform: translateY(-1px);
-        }
-        .image-lightbox__thumbs {
-            display: flex;
-            justify-content: center;
-            gap: .65rem;
-            width: fit-content;
-            max-width: 100%;
-            margin-inline: auto;
-            overflow-x: auto;
-            overscroll-behavior-inline: contain;
-            padding: .25rem .15rem .55rem;
-            scrollbar-color: #C2A391 rgba(245,235,230,.75);
+            min-width: auto;
+            height: auto;
+            padding: .25rem;
+            font-size: clamp(2rem, 5vw, 4.4rem);
             opacity: 0;
-            transform: translateY(14px) scale(.98);
+            pointer-events: auto;
         }
-        .image-lightbox.is-open .image-lightbox__thumbs {
-            animation: lightboxThumbRailIn .48s .16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes lightboxThumbRailIn {
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        .image-lightbox__thumb {
-            flex: 0 0 76px;
-            height: 58px;
-            border-radius: 1rem;
-            border: 2px solid transparent;
-            padding: 0;
-            overflow: hidden;
-            background: #F4EFEA;
-            opacity: .72;
-            transition: opacity .25s ease, transform .25s ease, border-color .25s ease, box-shadow .25s ease;
-        }
-        .image-lightbox.is-open .image-lightbox__thumb {
-            animation: lightboxThumbIn .4s cubic-bezier(0.16, 1, 0.3, 1) both;
-            animation-delay: calc(.2s + (var(--thumb-index, 0) * 40ms));
-        }
-        @keyframes lightboxThumbIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px) scale(.94);
-            }
-        }
-        .image-lightbox__thumb:hover,
-        .image-lightbox__thumb.is-active {
+        .image-lightbox__nav-zone:hover .image-lightbox__nav,
+        .image-lightbox__nav:focus-visible {
             opacity: 1;
-            transform: translateY(-2px);
-            border-color: #E1B2B6;
-            box-shadow: 0 10px 22px rgba(61,42,33,.12);
-        }
-        .image-lightbox__thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
         }
         .gallery-container .box,
         .onestyle-visual.has-lightbox {
@@ -559,11 +488,9 @@
             overflow: hidden;
         }
         @media (max-width: 640px) {
-            .image-lightbox { padding: .6rem; }
-            .image-lightbox__panel { border-radius: 1.4rem; }
-            .image-lightbox__image { height: 54vh; }
-            .image-lightbox__dots { max-width: 44vw; }
-            .image-lightbox__thumb { flex-basis: 64px; height: 50px; }
+            .image-lightbox__topbar { top: .85rem; right: .85rem; }
+            .image-lightbox__nav-zone { width: 28vw; }
+            .image-lightbox__nav { font-size: clamp(2rem, 9vw, 3.2rem); }
         }
 
         @media (max-width: 768px) {
@@ -1066,26 +993,32 @@
 
     <div id="image-lightbox" class="image-lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="צפייה מוגדלת בתמונה">
         <div class="image-lightbox__panel" role="document">
-            <div class="image-lightbox__topbar">
-                <span id="lightbox-counter">תמונה 1 מתוך 1</span>
+            <div class="image-lightbox__topbar" aria-label="פעולות תמונה">
                 <button type="button" id="lightbox-close" class="image-lightbox__close" aria-label="סגור תצוגת תמונה">
                     <i class="fa-solid fa-xmark"></i>
+                </button>
+                <button type="button" id="lightbox-download" class="image-lightbox__action" aria-label="הורד תמונה">
+                    <i class="fa-solid fa-arrow-down"></i>
+                </button>
+                <button type="button" id="lightbox-share" class="image-lightbox__action" aria-label="שתף תמונה">
+                    <i class="fa-solid fa-share-nodes"></i>
                 </button>
             </div>
             <div class="image-lightbox__stage">
                 <img id="lightbox-image" class="image-lightbox__image" src="" alt="תמונה מוגדלת מהגלריה">
+                <div class="image-lightbox__controls" aria-label="ניווט בין תמונות">
+                    <div class="image-lightbox__nav-zone image-lightbox__nav-zone--next">
+                        <button type="button" id="lightbox-next" class="image-lightbox__nav" aria-label="לתמונה הבאה">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="image-lightbox__nav-zone image-lightbox__nav-zone--prev">
+                        <button type="button" id="lightbox-prev" class="image-lightbox__nav" aria-label="לתמונה הקודמת">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div id="lightbox-caption" class="image-lightbox__caption">תמונה מתוך הגלריה</div>
-            <div class="image-lightbox__controls" aria-label="ניווט בין תמונות">
-                <button type="button" id="lightbox-next" class="image-lightbox__nav" aria-label="לתמונה הבאה">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-                <div id="lightbox-dots" class="image-lightbox__dots" aria-label="נקודות קרוסלה"></div>
-                <button type="button" id="lightbox-prev" class="image-lightbox__nav" aria-label="לתמונה הקודמת">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
-            </div>
-            <div id="lightbox-thumbs" class="image-lightbox__thumbs" aria-label="תמונות ממוזערות"></div>
         </div>
     </div>
 
@@ -1107,7 +1040,7 @@
     <script>
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const timers = new Map();
-        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyT_A5OTY7jkaY4Etd46EV4ZPpMDHkK0MBw4-OCy5Tn8GvugSrRARqlDFlgcsPHTn2x5w/exec';
+        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxqiJNkckq6sZHJsenFDUK3TefDbVMVO-CMH7MTIRjROZUPjKP3Xnt_Tq4inHtcN2HSaw/exec';
         const TURNSTILE_SITE_KEY = '1x00000000000000000000BB'; // מפתח בדיקה שקוף של Cloudflare; להחליף למפתח האתר האמיתי בפרודקשן
         
         const SHEETY_IMAGES_API_URL = 'https://plain-frost-bb26.l055673085.workers.dev/siteImages';
@@ -1185,11 +1118,9 @@
             return {
                 modal: document.getElementById('image-lightbox'),
                 image: document.getElementById('lightbox-image'),
-                counter: document.getElementById('lightbox-counter'),
-                caption: document.getElementById('lightbox-caption'),
-                dots: document.getElementById('lightbox-dots'),
-                thumbs: document.getElementById('lightbox-thumbs'),
-                close: document.getElementById('lightbox-close')
+                close: document.getElementById('lightbox-close'),
+                download: document.getElementById('lightbox-download'),
+                share: document.getElementById('lightbox-share')
             };
         }
 
@@ -1206,29 +1137,18 @@
             });
         }
 
-        function renderLightboxNavigation() {
-            const { dots, thumbs } = getLightboxElements();
-            if (!dots || !thumbs) return;
-            dots.innerHTML = lightboxState.images.map((_, index) => `
-                <button type="button" class="image-lightbox__dot${index === lightboxState.index ? ' is-active' : ''}" aria-label="עבור לתמונה ${index + 1}" onclick="setLightboxImage(${index})"></button>
-            `).join('');
-            thumbs.innerHTML = lightboxState.images.map((src, index) => `
-                <button type="button" class="image-lightbox__thumb${index === lightboxState.index ? ' is-active' : ''}" aria-label="פתח תמונה ${index + 1}" onclick="setLightboxImage(${index})">
-                    <img src="${escapeHtml(src)}" alt="תמונה ממוזערת ${index + 1}" loading="lazy">
-                </button>
-            `).join('');
-        }
-
         function syncLightboxActiveControls() {
-            const { counter, caption, dots, thumbs } = getLightboxElements();
-            const positionText = `תמונה ${lightboxState.index + 1} מתוך ${lightboxState.images.length}`;
-            if (counter) counter.textContent = `${positionText} · ${lightboxState.context}`;
-            if (caption) caption.textContent = `${positionText} — ${lightboxState.labels[lightboxState.index] || lightboxState.context}`;
-            dots?.querySelectorAll('.image-lightbox__dot').forEach((dot, index) => dot.classList.toggle('is-active', index === lightboxState.index));
-            thumbs?.querySelectorAll('.image-lightbox__thumb').forEach((thumb, index) => {
-                thumb.classList.toggle('is-active', index === lightboxState.index);
-                if (index === lightboxState.index) thumb.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
-            });
+            const { download, share } = getLightboxElements();
+            const currentSrc = lightboxState.images[lightboxState.index] || '';
+            const currentLabel = lightboxState.labels[lightboxState.index] || lightboxState.context;
+            if (download) {
+                download.dataset.src = currentSrc;
+                download.dataset.label = currentLabel;
+            }
+            if (share) {
+                share.dataset.src = currentSrc;
+                share.dataset.label = currentLabel;
+            }
         }
 
         function setLightboxImage(index) {
@@ -1249,6 +1169,48 @@
             setLightboxImage(lightboxState.index + step);
         }
 
+        async function downloadLightboxImage() {
+            const src = lightboxState.images[lightboxState.index];
+            if (!src) return;
+            const filename = `${(lightboxState.labels[lightboxState.index] || 'tamar-elyashiv-image').replace(/\s+/g, '-')}.jpg`;
+            try {
+                const response = await fetch(src, { mode: 'cors' });
+                if (!response.ok) throw new Error('Image download failed');
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(blobUrl);
+            } catch (error) {
+                console.error('Failed to download image as a file:', error);
+                const link = document.createElement('a');
+                link.href = src;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
+        }
+
+        async function shareLightboxImage() {
+            const src = lightboxState.images[lightboxState.index];
+            if (!src) return;
+            const label = lightboxState.labels[lightboxState.index] || document.title;
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: label, text: label, url: src });
+                    return;
+                } catch (error) {
+                    if (error?.name === 'AbortError') return;
+                }
+            }
+            await navigator.clipboard?.writeText(src);
+        }
+
         function openLightboxForSources(images, startIndex = 0, context = 'הגלריה') {
             const { modal, image, close } = getLightboxElements();
             const items = normalizeLightboxItems(images);
@@ -1259,7 +1221,6 @@
             lightboxState.index = Math.max(0, Math.min(startIndex, items.length - 1));
             image.src = lightboxState.images[lightboxState.index];
             image.alt = lightboxState.labels[lightboxState.index] || `תמונה מוגדלת ${lightboxState.index + 1}`;
-            renderLightboxNavigation();
             syncLightboxActiveControls();
             modal.classList.add('is-open');
             modal.setAttribute('aria-hidden', 'false');
@@ -1287,6 +1248,8 @@
 
         function initializeImageLightbox() {
             document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
+            document.getElementById('lightbox-download')?.addEventListener('click', downloadLightboxImage);
+            document.getElementById('lightbox-share')?.addEventListener('click', shareLightboxImage);
             document.getElementById('lightbox-prev')?.addEventListener('click', () => moveLightbox(-1));
             document.getElementById('lightbox-next')?.addEventListener('click', () => moveLightbox(1));
             document.getElementById('image-lightbox')?.addEventListener('click', (event) => {
